@@ -1,4 +1,7 @@
-# Kagi FastGPT Browser Extension
+# Kagi FastGPT Sidebar
+
+![image](https://github.com/user-attachments/assets/e287fb61-224e-4dfb-a8b7-7894d499c08b)
+
 
 A browser extension that adds a sidebar to any webpage, allowing you to ask questions about the current page using the [Kagi FastGPT API](https://help.kagi.com/kagi/api/fastgpt.html)
 
