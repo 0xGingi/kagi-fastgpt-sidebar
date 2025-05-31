@@ -3,16 +3,16 @@
   "version": "1.0.0",
   "description": "sidebar using Kagi FastGPT API to answer questions about web pages",
   "scripts": {
-    "build": "npm run clean && npm run build:chrome && npm run build:firefox",
-    "build:chrome": "npm run copy:chrome && npm run package:chrome",
-    "build:firefox": "npm run copy:firefox && npm run package:firefox",
+    "build": "bun run clean && bun run build:chrome && bun run build:firefox",
+    "build:chrome": "bun run copy:chrome && bun run package:chrome",
+    "build:firefox": "bun run copy:firefox && bun run package:firefox",
     "copy:chrome": "mkdir -p dist/chrome && cp -r icons dist/chrome/ && cp background.js content.js sidebar.css toggle-sidebar.js dist/chrome/ && cp manifest.json dist/chrome/",
     "copy:firefox": "mkdir -p dist/firefox && cp -r icons dist/firefox/ && cp background.js content.js sidebar.css toggle-sidebar.js dist/firefox/ && node scripts/create-firefox-manifest.js",
     "package:chrome": "cd dist/chrome && zip -r ../kagi-fastgpt-chrome-v1.0.0.zip .",
     "package:firefox": "cd dist/firefox && zip -r ../kagi-fastgpt-firefox-v1.0.0.zip .",
     "clean": "rm -rf dist",
-    "dev:chrome": "npm run copy:chrome && echo 'Chrome development build ready in dist/chrome'",
-    "dev:firefox": "npm run copy:firefox && echo 'Firefox development build ready in dist/firefox'"
+    "dev:chrome": "bun run copy:chrome && echo 'Chrome development build ready in dist/chrome'",
+    "dev:firefox": "bun run copy:firefox && echo 'Firefox development build ready in dist/firefox'"
   },
   "keywords": ["browser-extension", "kagi", "fastgpt", "ai", "sidebar"],
   "author": "0xgingi",

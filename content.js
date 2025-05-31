@@ -148,8 +148,9 @@ function askQuestion(includePageContent) {
   const pageContent = includePageContent ? extractPageContent() : null;
   
   if (includePageContent) {
-    console.log('Page content being sent:', pageContent?.substring(0, 500) + '...');
-    showMessage('Including page content in query...', 'success');
+    console.log(`Page content extracted: ${pageContent?.length || 0} characters`);
+    console.log('Page content preview:', pageContent?.substring(0, 500) + '...');
+    showMessage(`Including page content in query (${pageContent?.length || 0} chars)...`, 'success');
   }
   
   isProcessingRequest = true;
@@ -204,7 +205,19 @@ function extractPageContent() {
     .replace(/\n\s*\n/g, '\n')
     .trim();
   
-  return `URL: ${url}\nTitle: ${title}\nDescription: ${metaDescription}\nContent: ${cleanContent.substring(0, 4000)}`;
+  const truncatedContent = cleanContent.substring(0, 4000);
+  const result = `URL: ${url}\nTitle: ${title}\nDescription: ${metaDescription}\nContent: ${truncatedContent}`;
+  
+  console.log(`Content extraction breakdown:
+    - URL: ${url.length} chars
+    - Title: ${title.length} chars  
+    - Description: ${metaDescription.length} chars
+    - Raw content: ${content.length} chars
+    - Cleaned content: ${cleanContent.length} chars
+    - Truncated content: ${truncatedContent.length} chars
+    - Final payload: ${result.length} chars`);
+  
+  return result;
 }
 
 function displayResult(data) {

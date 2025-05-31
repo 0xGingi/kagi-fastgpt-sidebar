@@ -54,7 +54,11 @@ async function handleFastGPTQuery(query, pageContent) {
   
   let finalQuery = query;
   if (pageContent) {
-    finalQuery = `Based on this webpage content: "${pageContent.substring(0, 3000)}", ${query}`;
+    const truncatedContent = pageContent.substring(0, 3000);
+    finalQuery = `Based on this webpage content: "${truncatedContent}", ${query}`;
+    console.log(`FastGPT Query - Page content: ${truncatedContent.length} chars, User query: ${query.length} chars, Total: ${finalQuery.length} chars`);
+  } else {
+    console.log(`FastGPT Query - User query only: ${finalQuery.length} chars`);
   }
   
   const response = await fetch('https://kagi.com/api/v0/fastgpt', {
