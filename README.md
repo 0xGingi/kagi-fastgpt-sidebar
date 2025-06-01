@@ -9,7 +9,7 @@ A browser extension that adds a sidebar to any webpage, allowing you to ask ques
 
 ### Firefox
 
-- Download the latest zip from [Releases](https://github.com/0xgingi/kagi-fastgpt-sidebar/releases/latest)
+- Download the latest signed XPI from [Releases](https://github.com/0xgingi/kagi-fastgpt-sidebar/releases/latest)
 - go to [about:addons](about:addons) and click the settings icon the top right
 - Install Add-on from file
 
