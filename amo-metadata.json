@@ -1,0 +1,11 @@
+{
+  "summary": {
+    "en-US": "Context-aware AI sidebar using Kagi FastGPT API to answer questions about web pages and general queries"
+  },
+  "categories": [
+    "other"
+  ],
+  "version": {
+    "license": "MIT"
+  }
+} 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Kagi FastGPT Sidebar",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Context-aware sidebar using Kagi FastGPT API to answer questions about web pages and general queries",
   
   "browser_specific_settings": {
