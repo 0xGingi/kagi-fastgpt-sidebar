@@ -222,58 +222,258 @@ function extractPageContent() {
 
 function displayResult(data) {
   const resultsDiv = document.getElementById('kagi-results');
-  
-  const resultHtml = `
-    <div class="kagi-result">
-      <div class="kagi-answer">
-        <h4>Answer:</h4>
-        <div class="kagi-answer-content">${formatAnswer(data.output)}</div>
-      </div>
-      
-      ${data.references && data.references.length > 0 ? `
-        <div class="kagi-references">
-          <h4>References:</h4>
-          <ul>
-            ${data.references.map(ref => `
-              <li>
-                <a href="${ref.url}" target="_blank">${ref.title}</a>
-                <p>${ref.snippet}</p>
-              </li>
-            `).join('')}
-          </ul>
-        </div>
-      ` : ''}
-      
-      <div class="kagi-meta">
-        <small>Tokens used: ${data.tokens}</small>
-      </div>
-    </div>
-  `;
-  
-  resultsDiv.innerHTML = resultHtml;
+  resultsDiv.textContent = '';
+  resultsDiv.appendChild(createResultElement(data));
 }
 
-function formatAnswer(text) {
+function createResultElement(data) {
+  const resultDiv = document.createElement('div');
+  resultDiv.className = 'kagi-result';
+  
+  const answerDiv = document.createElement('div');
+  answerDiv.className = 'kagi-answer';
+  
+  const answerTitle = document.createElement('h4');
+  answerTitle.textContent = 'Answer:';
+  answerDiv.appendChild(answerTitle);
+  
+  const answerContent = document.createElement('div');
+  answerContent.className = 'kagi-answer-content';
+  answerContent.appendChild(createFormattedAnswer(data.output));
+  answerDiv.appendChild(answerContent);
+  
+  resultDiv.appendChild(answerDiv);
+  
+  if (data.references && data.references.length > 0) {
+    const referencesDiv = document.createElement('div');
+    referencesDiv.className = 'kagi-references';
+    
+    const referencesTitle = document.createElement('h4');
+    referencesTitle.textContent = 'References:';
+    referencesDiv.appendChild(referencesTitle);
+    
+    const referencesList = document.createElement('ul');
+    
+    data.references.forEach(ref => {
+      const listItem = document.createElement('li');
+      
+      const link = document.createElement('a');
+      link.href = sanitizeUrl(ref.url);
+      link.target = '_blank';
+      link.textContent = ref.title;
+      listItem.appendChild(link);
+      
+      const snippet = document.createElement('p');
+      snippet.textContent = ref.snippet;
+      listItem.appendChild(snippet);
+      
+      referencesList.appendChild(listItem);
+    });
+    
+    referencesDiv.appendChild(referencesList);
+    resultDiv.appendChild(referencesDiv);
+  }
+  
+  const metaDiv = document.createElement('div');
+  metaDiv.className = 'kagi-meta';
+  
+  const tokensInfo = document.createElement('small');
+  tokensInfo.textContent = `Tokens used: ${data.tokens}`;
+  metaDiv.appendChild(tokensInfo);
+  
+  resultDiv.appendChild(metaDiv);
+  
+  return resultDiv;
+}
+
+function sanitizeUrl(url) {
+  try {
+    const parsedUrl = new URL(url);
+    if (['http:', 'https:'].includes(parsedUrl.protocol)) {
+      return parsedUrl.href;
+    }
+  } catch {
+    return '#';
+  }
+  return '#';
+}
+
+function createFormattedAnswer(text) {
   const removeCitations = document.getElementById('kagi-remove-citations')?.checked ?? true;
   
-  let formatted = text
-    .replace(/\n/g, '<br>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/```(.*?)```/g, '<code class="kagi-inline-code">$1</code>')
-    .replace(/`([^`]+)`/g, '<code class="kagi-inline-code">$1</code>')
-    .replace(/^\- (.+)$/gm, '<li>$1</li>')
-    .replace(/^(\d+)\. (.+)$/gm, '<li>$1. $2</li>')
-    .replace(/(<li>.*<\/li>)/gs, '<ul class="kagi-answer-list">$1</ul>');
+  let processedText = text;
   
   if (removeCitations) {
-    formatted = formatted
+    processedText = processedText
       .replace(/\[\d+\]/g, '')
-      .replace(/\s+/g, ' ')
       .trim();
   }
   
-  return formatted;
+  const container = document.createElement('div');
+  
+  const paragraphs = processedText.split(/\n\s*\n/);
+  
+  paragraphs.forEach((paragraph, paragraphIndex) => {
+    const lines = paragraph.split('\n').map(line => line.trim()).filter(line => line);
+    
+    if (lines.length === 0) return;
+    
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      
+      if (line.match(/^\d+\.\s+/)) {
+        const ol = document.createElement('ol');
+        ol.className = 'kagi-answer-list';
+        
+        while (i < lines.length && lines[i].match(/^\d+\.\s+/)) {
+          const listItem = document.createElement('li');
+          const content = lines[i].replace(/^\d+\.\s+/, '');
+          listItem.appendChild(parseInlineFormatting(content));
+          ol.appendChild(listItem);
+          i++;
+        }
+        
+        container.appendChild(ol);
+      } else if (line.startsWith('- ')) {
+        const ul = document.createElement('ul');
+        ul.className = 'kagi-answer-list';
+        
+        while (i < lines.length && lines[i].startsWith('- ')) {
+          const listItem = document.createElement('li');
+          const content = lines[i].replace(/^- /, '');
+          listItem.appendChild(parseInlineFormatting(content));
+          ul.appendChild(listItem);
+          i++;
+        }
+        
+        container.appendChild(ul);
+      } else if (line.startsWith('```') && line.length > 3) {
+        const codeBlock = document.createElement('pre');
+        const code = document.createElement('code');
+        code.className = 'kagi-code-block';
+        
+        const language = line.substring(3).trim();
+        if (language) {
+          code.className += ` language-${language}`;
+        }
+        
+        let codeContent = '';
+        i++;
+        
+        while (i < lines.length && !lines[i].startsWith('```')) {
+          codeContent += lines[i] + '\n';
+          i++;
+        }
+        
+        if (i < lines.length && lines[i].startsWith('```')) {
+          i++;
+        }
+        
+        code.textContent = codeContent.trim();
+        codeBlock.appendChild(code);
+        container.appendChild(codeBlock);
+      } else {
+        let paragraphContent = line;
+        let j = i + 1;
+        
+        while (j < lines.length && 
+               !lines[j].match(/^\d+\.\s+/) && 
+               !lines[j].startsWith('- ') && 
+               !lines[j].startsWith('```')) {
+          paragraphContent += ' ' + lines[j];
+          j++;
+        }
+        
+        const p = document.createElement('p');
+        p.appendChild(parseInlineFormatting(paragraphContent));
+        container.appendChild(p);
+        
+        i = j;
+      }
+    }
+    
+    if (paragraphIndex < paragraphs.length - 1) {
+      const spacer = document.createElement('div');
+      spacer.style.height = '0.5em';
+      container.appendChild(spacer);
+    }
+  });
+  
+  return container;
+}
+
+function parseInlineFormatting(text) {
+  const container = document.createElement('span');
+  
+  const patterns = [
+    { regex: /```([^`]+)```/g, tag: 'code', className: 'kagi-inline-code' },
+    { regex: /`([^`]+)`/g, tag: 'code', className: 'kagi-inline-code' },
+    { regex: /\*\*([^*]+)\*\*/g, tag: 'strong' },
+    { regex: /\*([^*]+)\*/g, tag: 'em' }
+  ];
+  
+  let currentText = text;
+  const replacements = [];
+  
+  patterns.forEach((pattern, patternIndex) => {
+    let match;
+    pattern.regex.lastIndex = 0;
+    
+    while ((match = pattern.regex.exec(currentText)) !== null) {
+      replacements.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        content: match[1],
+        tag: pattern.tag,
+        className: pattern.className,
+        priority: patternIndex
+      });
+    }
+  });
+  
+  replacements.sort((a, b) => {
+    if (a.start !== b.start) return a.start - b.start;
+    return a.priority - b.priority;
+  });
+  
+  const filteredReplacements = [];
+  for (const replacement of replacements) {
+    const hasOverlap = filteredReplacements.some(existing => 
+      !(replacement.end <= existing.start || replacement.start >= existing.end)
+    );
+    if (!hasOverlap) {
+      filteredReplacements.push(replacement);
+    }
+  }
+  
+  if (filteredReplacements.length === 0) {
+    container.textContent = currentText;
+    return container;
+  }
+  
+  let lastIndex = 0;
+  
+  filteredReplacements.forEach(replacement => {
+    if (replacement.start > lastIndex) {
+      container.appendChild(document.createTextNode(currentText.substring(lastIndex, replacement.start)));
+    }
+    
+    const element = document.createElement(replacement.tag);
+    if (replacement.className) {
+      element.className = replacement.className;
+    }
+    element.textContent = replacement.content;
+    container.appendChild(element);
+    
+    lastIndex = replacement.end;
+  });
+  
+  if (lastIndex < currentText.length) {
+    container.appendChild(document.createTextNode(currentText.substring(lastIndex)));
+  }
+  
+  return container;
 }
 
 function showMessage(message, type) {
