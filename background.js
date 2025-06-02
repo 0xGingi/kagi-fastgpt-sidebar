@@ -4,68 +4,38 @@ const actionAPI = browserAPI.action || browserAPI.browserAction;
 
 actionAPI.onClicked.addListener(async (tab) => {
   try {
-    if (browserAPI.scripting) {
-      const results = await browserAPI.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => {
-          return {
-            hasContent: typeof window.initKagiFastGPTSidebar === 'function',
-            hasSidebar: !!document.getElementById('kagi-fastgpt-sidebar')
-          };
-        }
-      });
-      
-      const pageState = results[0]?.result;
-      
-      if (!pageState?.hasContent) {
-        try {
-          await browserAPI.scripting.insertCSS({
-            target: { tabId: tab.id },
-            files: ['sidebar.css']
-          });
-        } catch (cssError) {
-          console.log('CSS already inserted or failed to insert:', cssError.message);
-        }
-        
-        await browserAPI.scripting.executeScript({
+    const results = await browserAPI.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => {
+        return {
+          hasContent: typeof window.initKagiFastGPTSidebar === 'function',
+          hasSidebar: !!document.getElementById('kagi-fastgpt-sidebar')
+        };
+      }
+    });
+    
+    const pageState = results[0]?.result;
+    
+    if (!pageState?.hasContent) {
+      try {
+        await browserAPI.scripting.insertCSS({
           target: { tabId: tab.id },
-          files: ['content.js']
+          files: ['sidebar.css']
         });
+      } catch (cssError) {
+        console.log('CSS already inserted or failed to insert:', cssError.message);
       }
       
       await browserAPI.scripting.executeScript({
         target: { tabId: tab.id },
-        files: ['toggle-sidebar.js']
-      });
-      
-    } else if (browserAPI.tabs && browserAPI.tabs.executeScript) {
-      const results = await browserAPI.tabs.executeScript(tab.id, {
-        code: `({
-          hasContent: typeof window.initKagiFastGPTSidebar === 'function',
-          hasSidebar: !!document.getElementById('kagi-fastgpt-sidebar')
-        })`
-      });
-      
-      const pageState = results[0];
-      
-      if (!pageState?.hasContent) {
-        try {
-          await browserAPI.tabs.insertCSS(tab.id, {
-            file: 'sidebar.css'
-          });
-        } catch (cssError) {
-          console.log('CSS already inserted or failed to insert:', cssError.message);
-        }
-        
-        await browserAPI.tabs.executeScript(tab.id, {
-          file: 'content.js'
-        });
-      }
-      
-      await browserAPI.tabs.executeScript(tab.id, {
-        file: 'toggle-sidebar.js'
+        files: ['content.js']
       });
     }
+    
+    await browserAPI.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['toggle-sidebar.js']
+    });
   } catch (error) {
     console.error('Failed to toggle sidebar:', error);
   }

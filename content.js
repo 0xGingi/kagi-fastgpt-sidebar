@@ -1,3 +1,4 @@
+(function() {
 let sidebarInitialized = false;
 let isProcessingRequest = false;
 
@@ -496,3 +497,4 @@ function showLoading(show) {
     btn.textContent = show ? 'Thinking...' : (btn.id === 'kagi-ask-page' ? 'Ask about this page' : 'Ask general question');
   });
 }
+})();
