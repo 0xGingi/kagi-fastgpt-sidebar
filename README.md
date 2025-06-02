@@ -13,13 +13,8 @@ A browser extension that adds a sidebar to any webpage, allowing you to ask ques
 - go to [about:addons](about:addons) and click the settings icon the top right
 - Install Add-on from file
 
-### Chromium
-
-- Download the latest zip from [Releases](https://github.com/0xgingi/kagi-fastgpt-sidebar/releases/latest)
-- unzip the archive into a folder
-- go to [chrome://extensions](chrome://extensions)
-- enable developer mode
-- Load the unpacked extension
+### Chrome
+https://chromewebstore.google.com/detail/kagi-fastgpt-sidebar/nanobjnbcapkhbkbaffmclfoebfjlbjj
 
 ## Setup
 
