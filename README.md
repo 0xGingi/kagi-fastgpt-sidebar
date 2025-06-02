@@ -29,4 +29,3 @@ https://chromewebstore.google.com/detail/kagi-fastgpt-sidebar/nanobjnbcapkhbkbaf
 - **Configure the extension**:
    - Click the extension icon
    - Enter your Kagi API key when prompted
-   - Click "Save" to store the key securely
