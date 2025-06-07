@@ -10,7 +10,7 @@ A browser extension that adds a sidebar to any webpage, allowing you to ask ques
 ### Firefox
 https://addons.mozilla.org/en-US/firefox/addon/c4538cfd57d847a69447/
 
-### Chrome
+### Chrome / Orion
 https://chromewebstore.google.com/detail/kagi-fastgpt-sidebar/nanobjnbcapkhbkbaffmclfoebfjlbjj
 
 ## Setup
