@@ -583,15 +583,36 @@ function showShortcutInstructions(instructions) {
   const resultsDiv = document.getElementById('kagi-results');
   if (!resultsDiv) return;
   
-  resultsDiv.innerHTML = `
-    <div class="kagi-result">
-      <div class="kagi-answer">
-        <h4>How to customize keyboard shortcuts</h4>
-        <div class="kagi-answer-content">
-          <pre style="white-space: pre-wrap; font-family: inherit; font-size: 13px; line-height: 1.6; color: #ccc; background: #3a3a3a; padding: 16px; border-radius: 6px; margin: 12px 0;">${instructions}</pre>
-        </div>
-      </div>
-    </div>
-  `;
+  resultsDiv.textContent = '';
+  
+  const resultDiv = document.createElement('div');
+  resultDiv.className = 'kagi-result';
+  
+  const answerDiv = document.createElement('div');
+  answerDiv.className = 'kagi-answer';
+  
+  const heading = document.createElement('h4');
+  heading.textContent = 'How to customize keyboard shortcuts';
+  
+  const contentDiv = document.createElement('div');
+  contentDiv.className = 'kagi-answer-content';
+  
+  const preElement = document.createElement('pre');
+  preElement.style.whiteSpace = 'pre-wrap';
+  preElement.style.fontFamily = 'inherit';
+  preElement.style.fontSize = '13px';
+  preElement.style.lineHeight = '1.6';
+  preElement.style.color = '#ccc';
+  preElement.style.background = '#3a3a3a';
+  preElement.style.padding = '16px';
+  preElement.style.borderRadius = '6px';
+  preElement.style.margin = '12px 0';
+  preElement.textContent = instructions;
+  
+  contentDiv.appendChild(preElement);
+  answerDiv.appendChild(heading);
+  answerDiv.appendChild(contentDiv);
+  resultDiv.appendChild(answerDiv);
+  resultsDiv.appendChild(resultDiv);
 }
 })();
