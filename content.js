@@ -27,6 +27,16 @@ window.initKagiFastGPTSidebar = function() {
             <span>Remove citation markers ([1], [2], etc.)</span>
           </label>
         </div>
+        
+        <div class="kagi-setting">
+          <div class="kagi-keybind-info">
+            <p><strong>Keyboard Shortcut:</strong></p>
+            <div id="kagi-keybind-display">Alt+K</div>
+            <p class="kagi-help">
+              <button id="kagi-open-shortcuts" type="button">Customize keyboard shortcut</button>
+            </p>
+          </div>
+        </div>
       </div>
       
       <div id="kagi-chat-interface" class="kagi-section kagi-hidden">
@@ -52,32 +62,87 @@ window.initKagiFastGPTSidebar = function() {
   
   setupEventListeners();
   checkApiKey();
+  loadKeybindDisplay();
   sidebarInitialized = true;
 };
 
 function setupEventListeners() {
-  const closeBtn = document.getElementById('kagi-close-btn');
-  const saveKeyBtn = document.getElementById('kagi-save-key');
-  const askPageBtn = document.getElementById('kagi-ask-page');
-  const askGeneralBtn = document.getElementById('kagi-ask-general');
-  const settingsBtn = document.getElementById('kagi-settings-btn');
-  const queryInput = document.getElementById('kagi-query-input');
-  
-  closeBtn.addEventListener('click', () => {
-    const sidebar = document.getElementById('kagi-fastgpt-sidebar');
-    sidebar.classList.add('kagi-sidebar-hidden');
-  });
-  
-  saveKeyBtn.addEventListener('click', saveApiKey);
-  askPageBtn.addEventListener('click', () => askQuestion(true));
-  askGeneralBtn.addEventListener('click', () => askQuestion(false));
-  settingsBtn.addEventListener('click', showSettings);
-  
-  queryInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && e.ctrlKey) {
-      askQuestion(false);
+  setTimeout(() => {
+    const closeBtn = document.getElementById('kagi-close-btn');
+    const saveKeyBtn = document.getElementById('kagi-save-key');
+    const askPageBtn = document.getElementById('kagi-ask-page');
+    const askGeneralBtn = document.getElementById('kagi-ask-general');
+    const settingsBtn = document.getElementById('kagi-settings-btn');
+    const queryInput = document.getElementById('kagi-query-input');
+    const openShortcutsBtn = document.getElementById('kagi-open-shortcuts');
+    
+    if (!closeBtn || !saveKeyBtn || !askPageBtn || !askGeneralBtn || !settingsBtn || !queryInput || !openShortcutsBtn) {
+      console.error('Kagi FastGPT: Some UI elements not found when setting up event listeners');
+      return;
     }
-  });
+    
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const sidebar = document.getElementById('kagi-fastgpt-sidebar');
+      if (sidebar) {
+        sidebar.classList.add('kagi-sidebar-hidden');
+      }
+    });
+    
+    saveKeyBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      saveApiKey();
+    });
+    
+    askPageBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      askQuestion(true);
+    });
+    
+    askGeneralBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      askQuestion(false);
+    });
+    
+    settingsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showSettings();
+    });
+    
+    queryInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        e.preventDefault();
+        askQuestion(false);
+      }
+    });
+    
+    openShortcutsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      browserAPI.runtime.sendMessage({ action: 'openShortcutsPage' }, (response) => {
+        if (browserAPI.runtime.lastError) {
+          console.error('Runtime error opening shortcuts page:', browserAPI.runtime.lastError);
+          showMessage('Failed to open shortcuts page', 'error');
+          return;
+        }
+        
+        if (response && !response.success) {
+          if (response.showInstructions && response.instructions) {
+            showShortcutInstructions(response.instructions);
+          } else if (response.error) {
+            showMessage(response.error, 'error');
+          }
+        }
+      });
+    });
+    
+    console.log('Kagi FastGPT: Event listeners set up successfully');
+  }, 100);
 }
 
 function checkApiKey() {
@@ -90,6 +155,22 @@ function checkApiKey() {
     if (response && response.apiKey) {
       document.getElementById('kagi-api-setup').classList.add('kagi-hidden');
       document.getElementById('kagi-chat-interface').classList.remove('kagi-hidden');
+    }
+  });
+}
+
+function loadKeybindDisplay() {
+  browserAPI.runtime.sendMessage({ action: 'getKeybind' }, (response) => {
+    if (browserAPI.runtime.lastError) {
+      console.error('Runtime error getting keybind:', browserAPI.runtime.lastError);
+      return;
+    }
+    
+    const keybindDisplay = document.getElementById('kagi-keybind-display');
+    if (response && response.shortcut) {
+      keybindDisplay.textContent = response.shortcut;
+    } else {
+      keybindDisplay.textContent = 'Not set';
     }
   });
 }
@@ -496,5 +577,21 @@ function showLoading(show) {
     btn.disabled = show;
     btn.textContent = show ? 'Thinking...' : (btn.id === 'kagi-ask-page' ? 'Ask about this page' : 'Ask general question');
   });
+}
+
+function showShortcutInstructions(instructions) {
+  const resultsDiv = document.getElementById('kagi-results');
+  if (!resultsDiv) return;
+  
+  resultsDiv.innerHTML = `
+    <div class="kagi-result">
+      <div class="kagi-answer">
+        <h4>How to customize keyboard shortcuts</h4>
+        <div class="kagi-answer-content">
+          <pre style="white-space: pre-wrap; font-family: inherit; font-size: 13px; line-height: 1.6; color: #ccc; background: #3a3a3a; padding: 16px; border-radius: 6px; margin: 12px 0;">${instructions}</pre>
+        </div>
+      </div>
+    </div>
+  `;
 }
 })();

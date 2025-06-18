@@ -2,7 +2,7 @@ const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 const actionAPI = browserAPI.action || browserAPI.browserAction;
 
-actionAPI.onClicked.addListener(async (tab) => {
+async function toggleSidebar(tab) {
   try {
     const results = await browserAPI.scripting.executeScript({
       target: { tabId: tab.id },
@@ -39,9 +39,20 @@ actionAPI.onClicked.addListener(async (tab) => {
   } catch (error) {
     console.error('Failed to toggle sidebar:', error);
   }
+}
+
+actionAPI.onClicked.addListener(async (tab) => {
+  await toggleSidebar(tab);
 });
 
-
+browserAPI.commands.onCommand.addListener(async (command) => {
+  if (command === 'toggle-sidebar') {
+    const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0]) {
+      await toggleSidebar(tabs[0]);
+    }
+  }
+});
 
 browserAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'queryFastGPT') {
@@ -62,6 +73,31 @@ browserAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
     browserAPI.storage.sync.set({ kagiApiKey: request.apiKey }, () => {
       sendResponse({ success: true });
     });
+    return true;
+  }
+  
+  if (request.action === 'getKeybind') {
+    browserAPI.commands.getAll((commands) => {
+      const toggleCommand = commands.find(cmd => cmd.name === 'toggle-sidebar');
+      sendResponse({ shortcut: toggleCommand?.shortcut || 'Not set' });
+    });
+    return true;
+  }
+  
+  if (request.action === 'openShortcutsPage') {
+    const isFirefox = typeof browser !== 'undefined';
+    
+    if (isFirefox) {
+      sendResponse({ 
+        success: false, 
+        showInstructions: true,
+        instructions: 'To customize keyboard shortcuts in Firefox:\n\n1. Click the Firefox menu (☰)\n2. Select "Add-ons and themes"\n3. Find "Kagi FastGPT Sidebar"\n4. Click on the extension\n5. Look for keyboard shortcuts settings\n\nAlternatively, type about:addons in your address bar.'
+      });
+    } else {
+      browserAPI.tabs.create({ url: 'chrome://extensions/shortcuts' });
+      sendResponse({ success: true });
+    }
+    
     return true;
   }
 });

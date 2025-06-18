@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Kagi FastGPT Sidebar",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Context-aware sidebar using Kagi FastGPT API to answer questions about web pages and general queries",
   
   "browser_specific_settings": {
@@ -13,7 +13,8 @@
   "permissions": [
     "activeTab",
     "storage",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
   
   "host_permissions": [
@@ -31,6 +32,16 @@
       "32": "icons/icon32.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
+    }
+  },
+  
+  "commands": {
+    "toggle-sidebar": {
+      "suggested_key": {
+        "default": "Alt+K",
+        "mac": "Alt+K"
+      },
+      "description": "Toggle Kagi FastGPT Sidebar"
     }
   },
   

@@ -122,6 +122,44 @@
   color: #fff;
 }
 
+.kagi-keybind-info {
+  padding: 12px 0;
+}
+
+.kagi-keybind-info p {
+  margin: 0 0 8px 0;
+  color: #ccc;
+}
+
+#kagi-keybind-display {
+  background: #3a3a3a;
+  border: 1px solid #555;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 13px;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+#kagi-open-shortcuts {
+  background: #4a4a4a;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#kagi-open-shortcuts:hover {
+  background: #5a5a5a;
+  transform: translateY(-1px);
+}
+
 #kagi-api-key {
   padding: 14px 16px;
   border: 1px solid #444;

@@ -21,7 +21,7 @@ node scripts/create-firefox-manifest.js
 
 echo "Creating Chrome package..."
 cd dist/chrome
-zip -r ../kagi-fastgpt-chrome-v1.0.6.zip . > /dev/null
+zip -r ../kagi-fastgpt-chrome-v1.0.7.zip . > /dev/null
 cd ../..
 
 echo "Submitting Firefox extension to Mozilla Add-ons store..."
@@ -30,12 +30,12 @@ cd dist/firefox
 if [ -z "$WEB_EXT_API_KEY" ] || [ -z "$WEB_EXT_API_SECRET" ]; then
     echo "Warning: WEB_EXT_API_KEY and WEB_EXT_API_SECRET not set"
     echo "Creating unsigned XPI for development..."
-    zip -r ../kagi-fastgpt-firefox-v1.0.6-unsigned.xpi . > /dev/null
+    zip -r ../kagi-fastgpt-firefox-v1.0.7-unsigned.xpi . > /dev/null
     cd ../..
     echo ""
     echo "Package files created:"
-    echo "   Chrome:  dist/kagi-fastgpt-chrome-v1.0.6.zip"
-    echo "   Firefox: dist/kagi-fastgpt-firefox-v1.0.6-unsigned.xpi (UNSIGNED - for manual upload)"
+    echo "   Chrome:  dist/kagi-fastgpt-chrome-v1.0.7.zip"
+    echo "   Firefox: dist/kagi-fastgpt-firefox-v1.0.7-unsigned.xpi (UNSIGNED - for manual upload)"
     echo ""
     echo "To submit Firefox extension to store:"
     echo "1. Set WEB_EXT_API_KEY and WEB_EXT_API_SECRET environment variables"
@@ -53,17 +53,17 @@ else
             echo "   - Monitor https://addons.mozilla.org/developers/ for review status"
             echo ""
             echo "Chrome package created:"
-            echo "   Chrome: dist/kagi-fastgpt-chrome-v1.0.6.zip"
+            echo "   Chrome: dist/kagi-fastgpt-chrome-v1.0.7.zip"
             echo "   - Upload manually to: https://chrome.google.com/webstore/devconsole/"
         else
             echo "Failed to submit to Mozilla Add-ons store"
             echo "Creating fallback unsigned XPI..."
-            zip -r ../kagi-fastgpt-firefox-v1.0.6-unsigned.xpi . > /dev/null
+            zip -r ../kagi-fastgpt-firefox-v1.0.7-unsigned.xpi . > /dev/null
             cd ../..
             echo ""
             echo "Package files created:"
-            echo "   Chrome:  dist/kagi-fastgpt-chrome-v1.0.6.zip"
-            echo "   Firefox: dist/kagi-fastgpt-firefox-v1.0.6-unsigned.xpi (fallback)"
+            echo "   Chrome:  dist/kagi-fastgpt-chrome-v1.0.7.zip"
+            echo "   Firefox: dist/kagi-fastgpt-firefox-v1.0.7-unsigned.xpi (fallback)"
             echo ""
             echo "Manual submission required for Firefox:"
             echo "   Upload to: https://addons.mozilla.org/developers/addon/submit/"
@@ -71,12 +71,12 @@ else
     else
         echo "Error: web-ext not found. Install it with: npm install -g web-ext"
         echo "Creating unsigned XPI for manual upload..."
-        zip -r ../kagi-fastgpt-firefox-v1.0.6-unsigned.xpi . > /dev/null
+        zip -r ../kagi-fastgpt-firefox-v1.0.7-unsigned.xpi . > /dev/null
         cd ../..
         echo ""
         echo "Package files created:"
-        echo "   Chrome:  dist/kagi-fastgpt-chrome-v1.0.6.zip"
-        echo "   Firefox: dist/kagi-fastgpt-firefox-v1.0.6-unsigned.xpi (UNSIGNED)"
+        echo "   Chrome:  dist/kagi-fastgpt-chrome-v1.0.7.zip"
+        echo "   Firefox: dist/kagi-fastgpt-firefox-v1.0.7-unsigned.xpi (UNSIGNED)"
         echo ""
         echo "Manual submission required:"
         echo "   Chrome:  https://chrome.google.com/webstore/devconsole/"

@@ -1,6 +1,6 @@
 {
   "name": "kagi-fastgpt-sidebar",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "sidebar using Kagi FastGPT API to answer questions about web pages",
   "scripts": {
     "build": "bun run clean && bun run build:chrome && bun run build:firefox",
@@ -8,8 +8,8 @@
     "build:firefox": "bun run copy:firefox && bun run package:firefox",
     "copy:chrome": "mkdir -p dist/chrome && cp -r icons dist/chrome/ && cp background.js content.js sidebar.css toggle-sidebar.js dist/chrome/ && cp manifest.json dist/chrome/",
     "copy:firefox": "mkdir -p dist/firefox && cp -r icons dist/firefox/ && cp background.js content.js sidebar.css toggle-sidebar.js dist/firefox/ && node scripts/create-firefox-manifest.js",
-    "package:chrome": "cd dist/chrome && zip -r ../kagi-fastgpt-chrome-v1.0.6.zip .",
-    "package:firefox": "cd dist/firefox && zip -r ../kagi-fastgpt-firefox-v1.0.6.zip .",
+    "package:chrome": "cd dist/chrome && zip -r ../kagi-fastgpt-chrome-v1.0.7.zip .",
+    "package:firefox": "cd dist/firefox && zip -r ../kagi-fastgpt-firefox-v1.0.7.zip .",
     "submit": "bash scripts/build.sh",
     "submit:firefox": "bun run copy:firefox && cd dist/firefox && web-ext sign --channel=listed --amo-metadata=../../amo-metadata.json --api-key=$WEB_EXT_API_KEY --api-secret=$WEB_EXT_API_SECRET",
     "clean": "rm -rf dist",
