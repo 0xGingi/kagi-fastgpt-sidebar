@@ -64,7 +64,7 @@
 .kagi-sidebar-content {
   flex: 1;
   padding: 24px;
-  overflow-y: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 24px;

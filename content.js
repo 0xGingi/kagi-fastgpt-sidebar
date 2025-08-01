@@ -29,6 +29,13 @@ window.initKagiFastGPTSidebar = function() {
         </div>
         
         <div class="kagi-setting">
+          <label class="kagi-checkbox-label">
+            <input type="checkbox" id="kagi-clear-on-hide" checked>
+            <span>Clear prompt and results when hiding sidebar</span>
+          </label>
+        </div>
+        
+        <div class="kagi-setting">
           <div class="kagi-keybind-info">
             <p><strong>Keyboard Shortcut:</strong></p>
             <div id="kagi-keybind-display">Alt+K</div>
@@ -64,6 +71,14 @@ window.initKagiFastGPTSidebar = function() {
   checkApiKey();
   loadKeybindDisplay();
   sidebarInitialized = true;
+  
+  setTimeout(() => {
+    const chatInterface = document.getElementById('kagi-chat-interface');
+    const queryInput = document.getElementById('kagi-query-input');
+    if (chatInterface && !chatInterface.classList.contains('kagi-hidden') && queryInput) {
+      queryInput.focus();
+    }
+  }, 150);
 };
 
 function setupEventListeners() {
@@ -87,6 +102,14 @@ function setupEventListeners() {
       const sidebar = document.getElementById('kagi-fastgpt-sidebar');
       if (sidebar) {
         sidebar.classList.add('kagi-sidebar-hidden');
+        
+        const clearOnHide = document.getElementById('kagi-clear-on-hide');
+        if (clearOnHide && clearOnHide.checked) {
+          const queryInput = document.getElementById('kagi-query-input');
+          const resultsDiv = document.getElementById('kagi-results');
+          if (queryInput) queryInput.value = '';
+          if (resultsDiv) resultsDiv.innerHTML = '';
+        }
       }
     });
     
@@ -114,10 +137,14 @@ function setupEventListeners() {
       showSettings();
     });
     
-    queryInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && e.ctrlKey) {
-        e.preventDefault();
-        askQuestion(false);
+    queryInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (e.shiftKey) {
+          return;
+        } else {
+          e.preventDefault();
+          askQuestion(true);
+        }
       }
     });
     
@@ -193,6 +220,13 @@ function saveApiKey() {
       document.getElementById('kagi-api-setup').classList.add('kagi-hidden');
       document.getElementById('kagi-chat-interface').classList.remove('kagi-hidden');
       showMessage('API key saved successfully!', 'success');
+      
+      setTimeout(() => {
+        const queryInput = document.getElementById('kagi-query-input');
+        if (queryInput) {
+          queryInput.focus();
+        }
+      }, 100);
     }
   });
 }
@@ -207,6 +241,13 @@ function showSettings() {
   } else {
     setup.classList.add('kagi-hidden');
     chat.classList.remove('kagi-hidden');
+    
+    setTimeout(() => {
+      const queryInput = document.getElementById('kagi-query-input');
+      if (queryInput) {
+        queryInput.focus();
+      }
+    }, 100);
   }
 }
 
@@ -381,13 +422,15 @@ function sanitizeUrl(url) {
 }
 
 function createFormattedAnswer(text) {
-  const removeCitations = document.getElementById('kagi-remove-citations')?.checked ?? true;
+  const removeCitationsCheckbox = document.getElementById('kagi-remove-citations');
+  const removeCitations = removeCitationsCheckbox ? removeCitationsCheckbox.checked : true;
   
   let processedText = text;
   
   if (removeCitations) {
     processedText = processedText
       .replace(/\[\d+\]/g, '')
+      .replace(/【\d+】/g, '')
       .trim();
   }
   
