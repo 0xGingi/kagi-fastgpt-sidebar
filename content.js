@@ -50,7 +50,7 @@ window.initKagiFastGPTSidebar = function() {
         <div class="kagi-query-section">
           <textarea id="kagi-query-input" placeholder="Ask a question about this page or anything else..."></textarea>
           <div class="kagi-query-buttons">
-            <button id="kagi-ask-page">Ask about this page</button>
+            <button id="kagi-ask-page" class="kagi-default-action">Ask about this page <span class="kagi-enter-hint">⏎</span></button>
             <button id="kagi-ask-general">Ask general question</button>
           </div>
         </div>
@@ -615,11 +615,24 @@ function showMessage(message, type) {
 }
 
 function showLoading(show) {
-  const buttons = document.querySelectorAll('#kagi-ask-page, #kagi-ask-general');
-  buttons.forEach(btn => {
-    btn.disabled = show;
-    btn.textContent = show ? 'Thinking...' : (btn.id === 'kagi-ask-page' ? 'Ask about this page' : 'Ask general question');
-  });
+  const askPageBtn = document.getElementById('kagi-ask-page');
+  const askGeneralBtn = document.getElementById('kagi-ask-general');
+  
+  if (askPageBtn) {
+    askPageBtn.disabled = show;
+    if (show) {
+      askPageBtn.innerHTML = 'Thinking...';
+      askPageBtn.classList.remove('kagi-default-action');
+    } else {
+      askPageBtn.innerHTML = 'Ask about this page <span class="kagi-enter-hint">⏎</span>';
+      askPageBtn.classList.add('kagi-default-action');
+    }
+  }
+  
+  if (askGeneralBtn) {
+    askGeneralBtn.disabled = show;
+    askGeneralBtn.textContent = show ? 'Thinking...' : 'Ask general question';
+  }
 }
 
 function showShortcutInstructions(instructions) {

@@ -200,9 +200,14 @@
 }
 
 #kagi-save-key:disabled,
-#kagi-ask-page:disabled,
 #kagi-ask-general:disabled {
   background: #9ca3af;
+  cursor: not-allowed;
+}
+
+#kagi-ask-page:disabled {
+  background: #9ca3af !important;
+  border-color: #888 !important;
   cursor: not-allowed;
 }
 
@@ -246,8 +251,26 @@
 
 .kagi-query-buttons button {
   flex: 1;
-  font-size: 13px;
-  padding: 10px 12px;
+  font-size: 12px;
+  padding: 10px 8px;
+  white-space: nowrap;
+}
+
+#kagi-ask-page.kagi-default-action {
+  border: 2px solid #888 !important;
+  background: #6a6a6a !important;
+}
+
+#kagi-ask-page.kagi-default-action:hover {
+  border-color: #999 !important;
+  background: #7a7a7a !important;
+}
+
+.kagi-enter-hint {
+  opacity: 0.7;
+  font-size: 11px;
+  margin-left: 6px;
+  font-weight: 300;
 }
 
 .kagi-results-section {
