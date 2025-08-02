@@ -3,6 +3,13 @@ const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 const actionAPI = browserAPI.action || browserAPI.browserAction;
 
 async function toggleSidebar(tab) {
+  if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || 
+      tab.url.startsWith('moz-extension://') || tab.url.startsWith('about:') || 
+      tab.url.startsWith('edge://') || tab.url.startsWith('opera://')) {
+    console.log('Cannot inject content script into restricted URL:', tab.url);
+    return;
+  }
+
   try {
     const results = await browserAPI.scripting.executeScript({
       target: { tabId: tab.id },
@@ -98,6 +105,26 @@ browserAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ success: true });
     }
     
+    return true;
+  }
+  
+  if (request.action === 'getSettings') {
+    browserAPI.storage.sync.get(['kagiSettings'], (result) => {
+      const defaultSettings = {
+        removeCitations: true,
+        clearOnHide: true,
+        closeOnClickAway: true
+      };
+      const settings = result.kagiSettings || defaultSettings;
+      sendResponse({ settings });
+    });
+    return true;
+  }
+  
+  if (request.action === 'saveSettings') {
+    browserAPI.storage.sync.set({ kagiSettings: request.settings }, () => {
+      sendResponse({ success: true });
+    });
     return true;
   }
 });

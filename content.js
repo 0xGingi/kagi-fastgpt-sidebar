@@ -36,6 +36,13 @@ window.initKagiFastGPTSidebar = function() {
         </div>
         
         <div class="kagi-setting">
+          <label class="kagi-checkbox-label">
+            <input type="checkbox" id="kagi-close-on-click-away" checked>
+            <span>Close sidebar when clicking outside of it</span>
+          </label>
+        </div>
+        
+        <div class="kagi-setting">
           <div class="kagi-keybind-info">
             <p><strong>Keyboard Shortcut:</strong></p>
             <div id="kagi-keybind-display">Alt+K</div>
@@ -68,8 +75,10 @@ window.initKagiFastGPTSidebar = function() {
   document.body.appendChild(sidebar);
   
   setupEventListeners();
+  setupClickAwayHandler();
   checkApiKey();
   loadKeybindDisplay();
+  loadSettings();
   sidebarInitialized = true;
   
   setTimeout(() => {
@@ -90,6 +99,9 @@ function setupEventListeners() {
     const settingsBtn = document.getElementById('kagi-settings-btn');
     const queryInput = document.getElementById('kagi-query-input');
     const openShortcutsBtn = document.getElementById('kagi-open-shortcuts');
+    const removeCitationsCheckbox = document.getElementById('kagi-remove-citations');
+    const clearOnHideCheckbox = document.getElementById('kagi-clear-on-hide');
+    const closeOnClickAwayCheckbox = document.getElementById('kagi-close-on-click-away');
     
     if (!closeBtn || !saveKeyBtn || !askPageBtn || !askGeneralBtn || !settingsBtn || !queryInput || !openShortcutsBtn) {
       console.error('Kagi FastGPT: Some UI elements not found when setting up event listeners');
@@ -168,8 +180,94 @@ function setupEventListeners() {
       });
     });
     
+    if (removeCitationsCheckbox) {
+      removeCitationsCheckbox.addEventListener('change', saveSettings);
+    }
+    
+    if (clearOnHideCheckbox) {
+      clearOnHideCheckbox.addEventListener('change', saveSettings);
+    }
+    
+    if (closeOnClickAwayCheckbox) {
+      closeOnClickAwayCheckbox.addEventListener('change', saveSettings);
+    }
+    
     console.log('Kagi FastGPT: Event listeners set up successfully');
   }, 100);
+}
+
+function setupClickAwayHandler() {
+  document.addEventListener('click', (e) => {
+    const sidebar = document.getElementById('kagi-fastgpt-sidebar');
+    const closeOnClickAwayCheckbox = document.getElementById('kagi-close-on-click-away');
+    
+    if (!sidebar || !closeOnClickAwayCheckbox) return;
+    
+    if (!closeOnClickAwayCheckbox.checked) return;
+    
+    if (sidebar.classList.contains('kagi-sidebar-hidden')) return;
+    
+    if (sidebar.contains(e.target)) return;
+    
+    sidebar.classList.add('kagi-sidebar-hidden');
+    
+    const clearOnHide = document.getElementById('kagi-clear-on-hide');
+    if (clearOnHide && clearOnHide.checked) {
+      const queryInput = document.getElementById('kagi-query-input');
+      const resultsDiv = document.getElementById('kagi-results');
+      if (queryInput) queryInput.value = '';
+      if (resultsDiv) resultsDiv.innerHTML = '';
+    }
+  });
+}
+
+function loadSettings() {
+  browserAPI.runtime.sendMessage({ action: 'getSettings' }, (response) => {
+    if (browserAPI.runtime.lastError) {
+      console.error('Runtime error getting settings:', browserAPI.runtime.lastError);
+      return;
+    }
+    
+    if (response && response.settings) {
+      const settings = response.settings;
+      const removeCitationsCheckbox = document.getElementById('kagi-remove-citations');
+      const clearOnHideCheckbox = document.getElementById('kagi-clear-on-hide');
+      const closeOnClickAwayCheckbox = document.getElementById('kagi-close-on-click-away');
+      
+      if (removeCitationsCheckbox) {
+        removeCitationsCheckbox.checked = settings.removeCitations !== false;
+      }
+      if (clearOnHideCheckbox) {
+        clearOnHideCheckbox.checked = settings.clearOnHide !== false;
+      }
+      if (closeOnClickAwayCheckbox) {
+        closeOnClickAwayCheckbox.checked = settings.closeOnClickAway !== false;
+      }
+    }
+  });
+}
+
+function saveSettings() {
+  const removeCitationsCheckbox = document.getElementById('kagi-remove-citations');
+  const clearOnHideCheckbox = document.getElementById('kagi-clear-on-hide');
+  const closeOnClickAwayCheckbox = document.getElementById('kagi-close-on-click-away');
+  
+  const settings = {
+    removeCitations: removeCitationsCheckbox ? removeCitationsCheckbox.checked : true,
+    clearOnHide: clearOnHideCheckbox ? clearOnHideCheckbox.checked : true,
+    closeOnClickAway: closeOnClickAwayCheckbox ? closeOnClickAwayCheckbox.checked : true
+  };
+  
+  browserAPI.runtime.sendMessage({ action: 'saveSettings', settings }, (response) => {
+    if (browserAPI.runtime.lastError) {
+      console.error('Runtime error saving settings:', browserAPI.runtime.lastError);
+      return;
+    }
+    
+    if (response && response.success) {
+      console.log('Settings saved successfully');
+    }
+  });
 }
 
 function checkApiKey() {
