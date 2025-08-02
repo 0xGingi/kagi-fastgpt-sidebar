@@ -16,6 +16,7 @@ window.initKagiFastGPTSidebar = function() {
     </div>
     <div class="kagi-sidebar-content">
       <div id="kagi-api-setup" class="kagi-section">
+        <h3 class="kagi-settings-header">Settings</h3>
         <p>Enter your Kagi API key:</p>
         <input type="password" id="kagi-api-key" placeholder="Your Kagi API key">
         <button id="kagi-save-key">Save</button>
@@ -280,6 +281,10 @@ function checkApiKey() {
     if (response && response.apiKey) {
       document.getElementById('kagi-api-setup').classList.add('kagi-hidden');
       document.getElementById('kagi-chat-interface').classList.remove('kagi-hidden');
+      const settingsBtn = document.getElementById('kagi-settings-btn');
+      if (settingsBtn) {
+        settingsBtn.textContent = 'Settings';
+      }
     }
   });
 }
@@ -317,6 +322,10 @@ function saveApiKey() {
     if (response && response.success) {
       document.getElementById('kagi-api-setup').classList.add('kagi-hidden');
       document.getElementById('kagi-chat-interface').classList.remove('kagi-hidden');
+      const settingsBtn = document.getElementById('kagi-settings-btn');
+      if (settingsBtn) {
+        settingsBtn.textContent = 'Settings';
+      }
       showMessage('API key saved successfully!', 'success');
       
       setTimeout(() => {
@@ -332,13 +341,22 @@ function saveApiKey() {
 function showSettings() {
   const setup = document.getElementById('kagi-api-setup');
   const chat = document.getElementById('kagi-chat-interface');
+  const settingsBtn = document.getElementById('kagi-settings-btn');
   
   if (setup.classList.contains('kagi-hidden')) {
+    // Show settings
     setup.classList.remove('kagi-hidden');
     chat.classList.add('kagi-hidden');
+    if (settingsBtn) {
+      settingsBtn.textContent = '← Back';
+    }
   } else {
+    // Show chat
     setup.classList.add('kagi-hidden');
     chat.classList.remove('kagi-hidden');
+    if (settingsBtn) {
+      settingsBtn.textContent = 'Settings';
+    }
     
     setTimeout(() => {
       const queryInput = document.getElementById('kagi-query-input');
