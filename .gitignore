@@ -1,3 +1,5 @@
 dist/
 s*.md
 S*.md
+node_modules
+C*.md
