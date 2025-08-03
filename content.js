@@ -61,6 +61,7 @@ window.initKagiFastGPTSidebar = function() {
             <button id="kagi-ask-page" class="kagi-default-action">Ask about this page <span class="kagi-enter-hint">⏎</span></button>
             <button id="kagi-ask-general">Ask general question</button>
           </div>
+          <div id="kagi-status-message" class="kagi-status-message"></div>
         </div>
         
         <div id="kagi-results" class="kagi-results-section"></div>
@@ -344,14 +345,12 @@ function showSettings() {
   const settingsBtn = document.getElementById('kagi-settings-btn');
   
   if (setup.classList.contains('kagi-hidden')) {
-    // Show settings
     setup.classList.remove('kagi-hidden');
     chat.classList.add('kagi-hidden');
     if (settingsBtn) {
       settingsBtn.textContent = '← Back';
     }
   } else {
-    // Show chat
     setup.classList.add('kagi-hidden');
     chat.classList.remove('kagi-hidden');
     if (settingsBtn) {
@@ -718,15 +717,19 @@ function parseInlineFormatting(text) {
 }
 
 function showMessage(message, type) {
-  const messageDiv = document.createElement('div');
-  messageDiv.className = `kagi-message kagi-message-${type}`;
-  messageDiv.textContent = message;
+  const statusArea = document.getElementById('kagi-status-message');
+  if (!statusArea) return;
   
-  const sidebar = document.getElementById('kagi-fastgpt-sidebar');
-  sidebar.appendChild(messageDiv);
+  if (statusArea.timeoutId) {
+    clearTimeout(statusArea.timeoutId);
+  }
   
-  setTimeout(() => {
-    messageDiv.remove();
+  statusArea.textContent = message;
+  statusArea.className = `kagi-status-message kagi-status-${type}`;
+  
+  statusArea.timeoutId = setTimeout(() => {
+    statusArea.textContent = '';
+    statusArea.className = 'kagi-status-message';
   }, 3000);
 }
 
