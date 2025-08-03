@@ -6,9 +6,16 @@
     
     if (wasHidden && !sidebar.classList.contains('kagi-sidebar-hidden')) {
       setTimeout(() => {
+        const setup = document.getElementById('kagi-api-setup');
         const chatInterface = document.getElementById('kagi-chat-interface');
+        const settingsBtn = document.getElementById('kagi-settings-btn');
         const queryInput = document.getElementById('kagi-query-input');
-        if (chatInterface && !chatInterface.classList.contains('kagi-hidden') && queryInput) {
+        
+        if (setup) setup.classList.add('kagi-hidden');
+        if (chatInterface) chatInterface.classList.remove('kagi-hidden');
+        if (settingsBtn) settingsBtn.textContent = 'Settings';
+        
+        if (queryInput) {
           queryInput.focus();
         }
       }, 100);
