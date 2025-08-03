@@ -170,5 +170,8 @@ async function handleFastGPTQuery(query, pageContent) {
   }
   
   const data = await response.json();
-  return data.data;
+  return {
+    ...data.data,
+    meta: data.meta
+  };
 } 

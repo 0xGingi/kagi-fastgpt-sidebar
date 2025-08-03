@@ -70,7 +70,7 @@ window.initKagiFastGPTSidebar = function() {
       
       <div class="kagi-footer">
         <button id="kagi-settings-btn">Settings</button>
-        <span class="kagi-cost-info">1.5¢ per query</span>
+        <span class="kagi-cost-info" id="kagi-cost-info">1.5¢ per query</span>
       </div>
     </div>
   `;
@@ -465,6 +465,8 @@ function displayResult(data) {
   const resultsDiv = document.getElementById('kagi-results');
   resultsDiv.textContent = '';
   resultsDiv.appendChild(createResultElement(data));
+  
+  updateFooterBalance(data.meta);
 }
 
 function createResultElement(data) {
@@ -522,9 +524,25 @@ function createResultElement(data) {
   tokensInfo.textContent = `Tokens used: ${data.tokens}`;
   metaDiv.appendChild(tokensInfo);
   
+  if (data.meta && data.meta.api_balance !== undefined) {
+    const balanceInfo = document.createElement('small');
+    balanceInfo.textContent = ` • Balance: $${data.meta.api_balance.toFixed(2)}`;
+    balanceInfo.style.marginLeft = '8px';
+    metaDiv.appendChild(balanceInfo);
+  }
+  
   resultDiv.appendChild(metaDiv);
   
   return resultDiv;
+}
+
+function updateFooterBalance(meta) {
+  const costInfo = document.getElementById('kagi-cost-info');
+  if (!costInfo) return;
+  
+  if (meta && meta.api_balance !== undefined) {
+    costInfo.textContent = `Balance: $${meta.api_balance.toFixed(2)} • 1.5¢ per query`;
+  }
 }
 
 function sanitizeUrl(url) {
