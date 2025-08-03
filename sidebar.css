@@ -252,8 +252,10 @@
 .kagi-query-buttons button {
   flex: 1;
   font-size: 12px;
-  padding: 10px 8px;
-  white-space: nowrap;
+  padding: 10px 12px;
+  text-align: center;
+  word-wrap: break-word;
+  line-height: 1.3;
 }
 
 #kagi-ask-page.kagi-default-action {
