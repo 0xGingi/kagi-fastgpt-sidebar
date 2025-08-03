@@ -10,6 +10,7 @@ window.initKagiFastGPTSidebar = function() {
   const sidebar = document.createElement('div');
   sidebar.id = 'kagi-fastgpt-sidebar';
   sidebar.innerHTML = `
+    <div class="kagi-resize-handle"></div>
     <div class="kagi-sidebar-header">
       <h3>Kagi FastGPT</h3>
       <button id="kagi-close-btn" type="button">×</button>
@@ -81,6 +82,8 @@ window.initKagiFastGPTSidebar = function() {
   checkApiKey();
   loadKeybindDisplay();
   loadSettings();
+  initResizeHandle();
+  
   sidebarInitialized = true;
   
   setTimeout(() => {
@@ -789,5 +792,56 @@ function showShortcutInstructions(instructions) {
   answerDiv.appendChild(contentDiv);
   resultDiv.appendChild(answerDiv);
   resultsDiv.appendChild(resultDiv);
+}
+
+function initResizeHandle() {
+  const resizeHandle = document.querySelector('.kagi-resize-handle');
+  const sidebar = document.getElementById('kagi-fastgpt-sidebar');
+  
+  if (!resizeHandle || !sidebar) return;
+  
+  let isResizing = false;
+  let startX = 0;
+  let startWidth = 0;
+  
+  resizeHandle.addEventListener('mousedown', (e) => {
+    isResizing = true;
+    startX = e.clientX;
+    startWidth = parseInt(window.getComputedStyle(sidebar).width, 10);
+    
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'ew-resize';
+    
+    e.preventDefault();
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!isResizing) return;
+    
+    const deltaX = startX - e.clientX;
+    const newWidth = Math.max(300, Math.min(800, startWidth + deltaX));
+    
+    sidebar.style.width = newWidth + 'px';
+    
+    e.preventDefault();
+  });
+  
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false;
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      
+      const currentWidth = sidebar.style.width;
+      if (currentWidth) {
+        localStorage.setItem('kagi-sidebar-width', currentWidth);
+      }
+    }
+  });
+  
+  const savedWidth = localStorage.getItem('kagi-sidebar-width');
+  if (savedWidth) {
+    sidebar.style.width = savedWidth;
+  }
 }
 })();

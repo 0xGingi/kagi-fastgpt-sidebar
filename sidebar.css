@@ -3,6 +3,8 @@
   top: 0;
   right: 0;
   width: 400px;
+  min-width: 300px;
+  max-width: 800px;
   height: 100vh;
   background: #2d2d2d;
   border-left: 1px solid #444;
@@ -14,10 +16,46 @@
   display: flex;
   flex-direction: column;
   color: #ffffff;
+  resize: horizontal;
+  overflow: hidden;
 }
 
 #kagi-fastgpt-sidebar.kagi-sidebar-hidden {
   display: none;
+}
+
+.kagi-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background: transparent;
+  cursor: ew-resize;
+  z-index: 1000000;
+  transition: background-color 0.2s;
+}
+
+.kagi-resize-handle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.kagi-resize-handle::before {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.kagi-resize-handle:hover::before {
+  opacity: 1;
 }
 
 .kagi-hidden {
@@ -461,9 +499,14 @@
 
 @media (max-width: 768px) {
   #kagi-fastgpt-sidebar {
-    width: 100vw;
+    width: 100vw !important;
+    min-width: 100vw !important;
     left: 0;
     right: 0;
+  }
+  
+  .kagi-resize-handle {
+    display: none;
   }
   
   .kagi-query-buttons {
