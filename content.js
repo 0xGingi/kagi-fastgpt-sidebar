@@ -518,7 +518,7 @@ function askQuestion(includePageContent) {
   if (includePageContent) {
     console.log(`Page content extracted: ${pageContent?.length || 0} characters`);
     console.log('Page content preview:', pageContent?.substring(0, 500) + '...');
-    showMessage(`Including page content in query (${pageContent?.length || 0} chars)...`, 'success');
+    showMessage(`Including page content in query (${pageContent?.length || 0} chars)...`, 'success', true);
   }
   
   isProcessingRequest = true;
@@ -530,6 +530,7 @@ function askQuestion(includePageContent) {
     pageContent
   }, (response) => {
     showLoading(false);
+    clearMessage();
     isProcessingRequest = false;
     
     if (browserAPI.runtime.lastError) {
@@ -864,7 +865,7 @@ function parseInlineFormatting(text) {
   return container;
 }
 
-function showMessage(message, type) {
+function showMessage(message, type, persistent = false) {
   const statusArea = document.getElementById('kagi-status-message');
   if (!statusArea) return;
   
@@ -875,10 +876,24 @@ function showMessage(message, type) {
   statusArea.textContent = message;
   statusArea.className = `kagi-status-message kagi-status-${type}`;
   
-  statusArea.timeoutId = setTimeout(() => {
-    statusArea.textContent = '';
-    statusArea.className = 'kagi-status-message';
-  }, 3000);
+  if (!persistent) {
+    statusArea.timeoutId = setTimeout(() => {
+      statusArea.textContent = '';
+      statusArea.className = 'kagi-status-message';
+    }, 3000);
+  }
+}
+
+function clearMessage() {
+  const statusArea = document.getElementById('kagi-status-message');
+  if (!statusArea) return;
+  
+  if (statusArea.timeoutId) {
+    clearTimeout(statusArea.timeoutId);
+  }
+  
+  statusArea.textContent = '';
+  statusArea.className = 'kagi-status-message';
 }
 
 function showLoading(show) {
