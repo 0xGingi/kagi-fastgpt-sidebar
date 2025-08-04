@@ -19,7 +19,10 @@ window.initKagiFastGPTSidebar = function() {
       <div id="kagi-api-setup" class="kagi-section">
         <h3 class="kagi-settings-header">Settings</h3>
         <p>Enter your Kagi API key:</p>
-        <input type="password" id="kagi-api-key" placeholder="Your Kagi API key">
+        <div class="kagi-api-key-container">
+          <input type="password" id="kagi-api-key" placeholder="Your Kagi API key">
+          <button type="button" id="kagi-toggle-key-visibility" class="kagi-toggle-key-btn" title="Show/hide API key">show</button>
+        </div>
         <button id="kagi-save-key">Save</button>
         <p class="kagi-help">Get your API key from <a href="https://kagi.com/settings?p=api" target="_blank">Kagi Settings</a></p>
         
@@ -104,6 +107,7 @@ function setupEventListeners() {
     const settingsBtn = document.getElementById('kagi-settings-btn');
     const queryInput = document.getElementById('kagi-query-input');
     const openShortcutsBtn = document.getElementById('kagi-open-shortcuts');
+    const toggleKeyVisibilityBtn = document.getElementById('kagi-toggle-key-visibility');
     const removeCitationsCheckbox = document.getElementById('kagi-remove-citations');
     const clearOnHideCheckbox = document.getElementById('kagi-clear-on-hide');
     const closeOnClickAwayCheckbox = document.getElementById('kagi-close-on-click-away');
@@ -195,6 +199,14 @@ function setupEventListeners() {
     
     if (closeOnClickAwayCheckbox) {
       closeOnClickAwayCheckbox.addEventListener('change', saveSettings);
+    }
+    
+    if (toggleKeyVisibilityBtn) {
+      toggleKeyVisibilityBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleApiKeyVisibility();
+      });
     }
     
     console.log('Kagi FastGPT: Event listeners set up successfully');
@@ -289,6 +301,13 @@ function checkApiKey() {
       if (settingsBtn) {
         settingsBtn.textContent = 'Settings';
       }
+      
+      const apiKeyInput = document.getElementById('kagi-api-key');
+      if (apiKeyInput) {
+        apiKeyInput.dataset.actualKey = response.apiKey;
+        apiKeyInput.value = '*'.repeat(Math.min(response.apiKey.length, 32));
+        apiKeyInput.dataset.masked = 'true';
+      }
     }
   });
 }
@@ -309,9 +328,43 @@ function loadKeybindDisplay() {
   });
 }
 
+function toggleApiKeyVisibility() {
+  const apiKeyInput = document.getElementById('kagi-api-key');
+  const toggleBtn = document.getElementById('kagi-toggle-key-visibility');
+  
+  if (!apiKeyInput || !toggleBtn) return;
+  
+  if (apiKeyInput.dataset.masked === 'true' && apiKeyInput.dataset.actualKey) {
+    apiKeyInput.value = apiKeyInput.dataset.actualKey;
+    apiKeyInput.type = 'text';
+    apiKeyInput.dataset.masked = 'false';
+    toggleBtn.textContent = 'hide';
+    toggleBtn.title = 'Hide API key';
+  } else {
+    const currentValue = apiKeyInput.value.trim();
+    if (currentValue && !apiKeyInput.dataset.actualKey) {
+      apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
+      toggleBtn.textContent = apiKeyInput.type === 'password' ? 'show' : 'hide';
+      toggleBtn.title = apiKeyInput.type === 'password' ? 'Show API key' : 'Hide API key';
+    } else if (apiKeyInput.dataset.actualKey) {
+      apiKeyInput.value = '*'.repeat(Math.min(apiKeyInput.dataset.actualKey.length, 32));
+      apiKeyInput.type = 'password';
+      apiKeyInput.dataset.masked = 'true';
+      toggleBtn.textContent = 'show';
+      toggleBtn.title = 'Show API key';
+    }
+  }
+}
+
 function saveApiKey() {
-  const apiKey = document.getElementById('kagi-api-key').value.trim();
-  if (!apiKey) {
+  const apiKeyInput = document.getElementById('kagi-api-key');
+  let apiKey = apiKeyInput.value.trim();
+  
+  if (apiKeyInput.dataset.masked === 'true' && apiKeyInput.dataset.actualKey) {
+    apiKey = apiKeyInput.dataset.actualKey;
+  }
+  
+  if (!apiKey || apiKey === '*'.repeat(apiKey.length)) {
     showMessage('Please enter an API key', 'error');
     return;
   }
@@ -331,6 +384,17 @@ function saveApiKey() {
         settingsBtn.textContent = 'Settings';
       }
       showMessage('API key saved successfully!', 'success');
+      
+      apiKeyInput.dataset.actualKey = apiKey;
+      apiKeyInput.value = '*'.repeat(Math.min(apiKey.length, 32));
+      apiKeyInput.type = 'password';
+      apiKeyInput.dataset.masked = 'true';
+      
+      const toggleBtn = document.getElementById('kagi-toggle-key-visibility');
+      if (toggleBtn) {
+        toggleBtn.textContent = 'show';
+        toggleBtn.title = 'Show API key';
+      }
       
       setTimeout(() => {
         const queryInput = document.getElementById('kagi-query-input');
@@ -353,6 +417,8 @@ function showSettings() {
     if (settingsBtn) {
       settingsBtn.textContent = '← Back';
     }
+    
+    loadApiKeyForSettings();
   } else {
     setup.classList.add('kagi-hidden');
     chat.classList.remove('kagi-hidden');
@@ -367,6 +433,40 @@ function showSettings() {
       }
     }, 100);
   }
+}
+
+function loadApiKeyForSettings() {
+  browserAPI.runtime.sendMessage({ action: 'getApiKey' }, (response) => {
+    if (browserAPI.runtime.lastError) {
+      console.error('Runtime error getting API key:', browserAPI.runtime.lastError);
+      return;
+    }
+    
+    const apiKeyInput = document.getElementById('kagi-api-key');
+    const toggleBtn = document.getElementById('kagi-toggle-key-visibility');
+    
+    if (response && response.apiKey && apiKeyInput) {
+      apiKeyInput.dataset.actualKey = response.apiKey;
+      apiKeyInput.value = '*'.repeat(Math.min(response.apiKey.length, 32));
+      apiKeyInput.type = 'password';
+      apiKeyInput.dataset.masked = 'true';
+      
+      if (toggleBtn) {
+        toggleBtn.textContent = 'show';
+        toggleBtn.title = 'Show API key';
+      }
+    } else if (apiKeyInput) {
+      apiKeyInput.value = '';
+      apiKeyInput.type = 'password';
+      delete apiKeyInput.dataset.actualKey;
+      delete apiKeyInput.dataset.masked;
+      
+      if (toggleBtn) {
+        toggleBtn.textContent = 'show';
+        toggleBtn.title = 'Show API key';
+      }
+    }
+  });
 }
 
 function askQuestion(includePageContent) {
