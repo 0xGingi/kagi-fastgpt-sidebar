@@ -50,7 +50,7 @@ window.initKagiFastGPTSidebar = function() {
         <div class="kagi-setting">
           <div class="kagi-context-length-setting">
             <label for="kagi-max-context-length">Max webpage context (characters):</label>
-            <input type="number" id="kagi-max-context-length" min="1000" max="20000" step="500" value="4000">
+            <input type="number" id="kagi-max-context-length" min="1000" step="500" value="4000">
             <p class="kagi-help">Default: 4000</p>
           </div>
         </div>
@@ -223,7 +223,6 @@ function setupEventListeners() {
       maxContextLengthInput.addEventListener('input', (e) => {
         const value = parseInt(e.target.value);
         if (value < 1000) e.target.value = 1000;
-        if (value > 20000) e.target.value = 20000;
       });
     }
     
