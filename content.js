@@ -903,7 +903,7 @@ function showLoading(show) {
   if (askPageBtn) {
     askPageBtn.disabled = show;
     if (show) {
-      askPageBtn.innerHTML = 'Thinking...';
+      askPageBtn.textContent = 'Thinking...';
       askPageBtn.classList.remove('kagi-default-action');
     } else {
       askPageBtn.innerHTML = 'Ask about this page <span class="kagi-enter-hint">⏎</span>';
@@ -913,7 +913,7 @@ function showLoading(show) {
   
   if (askGeneralBtn) {
     askGeneralBtn.disabled = show;
-    askGeneralBtn.innerHTML = show ? 'Thinking...' : 'Ask general question';
+    askGeneralBtn.textContent = show ? 'Thinking...' : 'Ask general question';
   }
 }
 
