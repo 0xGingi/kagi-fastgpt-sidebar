@@ -160,6 +160,35 @@
   color: #fff;
 }
 
+.kagi-context-length-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kagi-context-length-setting label {
+  color: #ccc;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+#kagi-max-context-length {
+  padding: 8px 12px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  font-size: 13px;
+  background: #2a2a2a;
+  color: #fff;
+  transition: all 0.2s;
+  width: 100px;
+}
+
+#kagi-max-context-length:focus {
+  outline: none;
+  border-color: #666;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
 .kagi-keybind-info {
   padding: 12px 0;
 }

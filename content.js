@@ -48,6 +48,14 @@ window.initKagiFastGPTSidebar = function() {
         </div>
         
         <div class="kagi-setting">
+          <div class="kagi-context-length-setting">
+            <label for="kagi-max-context-length">Max webpage context (characters):</label>
+            <input type="number" id="kagi-max-context-length" min="1000" max="20000" step="500" value="4000">
+            <p class="kagi-help">Default: 4000</p>
+          </div>
+        </div>
+        
+        <div class="kagi-setting">
           <div class="kagi-keybind-info">
             <p><strong>Keyboard Shortcut:</strong></p>
             <div id="kagi-keybind-display">Alt+K</div>
@@ -111,6 +119,7 @@ function setupEventListeners() {
     const removeCitationsCheckbox = document.getElementById('kagi-remove-citations');
     const clearOnHideCheckbox = document.getElementById('kagi-clear-on-hide');
     const closeOnClickAwayCheckbox = document.getElementById('kagi-close-on-click-away');
+    const maxContextLengthInput = document.getElementById('kagi-max-context-length');
     
     if (!closeBtn || !saveKeyBtn || !askPageBtn || !askGeneralBtn || !settingsBtn || !queryInput || !openShortcutsBtn) {
       console.error('Kagi FastGPT: Some UI elements not found when setting up event listeners');
@@ -209,6 +218,15 @@ function setupEventListeners() {
       });
     }
     
+    if (maxContextLengthInput) {
+      maxContextLengthInput.addEventListener('change', saveSettings);
+      maxContextLengthInput.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value);
+        if (value < 1000) e.target.value = 1000;
+        if (value > 20000) e.target.value = 20000;
+      });
+    }
+    
     console.log('Kagi FastGPT: Event listeners set up successfully');
   }, 100);
 }
@@ -250,6 +268,7 @@ function loadSettings() {
       const removeCitationsCheckbox = document.getElementById('kagi-remove-citations');
       const clearOnHideCheckbox = document.getElementById('kagi-clear-on-hide');
       const closeOnClickAwayCheckbox = document.getElementById('kagi-close-on-click-away');
+      const maxContextLengthInput = document.getElementById('kagi-max-context-length');
       
       if (removeCitationsCheckbox) {
         removeCitationsCheckbox.checked = settings.removeCitations !== false;
@@ -260,6 +279,9 @@ function loadSettings() {
       if (closeOnClickAwayCheckbox) {
         closeOnClickAwayCheckbox.checked = settings.closeOnClickAway !== false;
       }
+      if (maxContextLengthInput) {
+        maxContextLengthInput.value = settings.maxContextLength || 4000;
+      }
     }
   });
 }
@@ -268,11 +290,13 @@ function saveSettings() {
   const removeCitationsCheckbox = document.getElementById('kagi-remove-citations');
   const clearOnHideCheckbox = document.getElementById('kagi-clear-on-hide');
   const closeOnClickAwayCheckbox = document.getElementById('kagi-close-on-click-away');
+  const maxContextLengthInput = document.getElementById('kagi-max-context-length');
   
   const settings = {
     removeCitations: removeCitationsCheckbox ? removeCitationsCheckbox.checked : true,
     clearOnHide: clearOnHideCheckbox ? clearOnHideCheckbox.checked : true,
-    closeOnClickAway: closeOnClickAwayCheckbox ? closeOnClickAwayCheckbox.checked : true
+    closeOnClickAway: closeOnClickAwayCheckbox ? closeOnClickAwayCheckbox.checked : true,
+    maxContextLength: maxContextLengthInput ? parseInt(maxContextLengthInput.value) || 4000 : 4000
   };
   
   browserAPI.runtime.sendMessage({ action: 'saveSettings', settings }, (response) => {
@@ -486,7 +510,10 @@ function askQuestion(includePageContent) {
   const resultsDiv = document.getElementById('kagi-results');
   resultsDiv.innerHTML = '';
   
-  const pageContent = includePageContent ? extractPageContent() : null;
+  const maxContextLengthInput = document.getElementById('kagi-max-context-length');
+  const maxContextLength = maxContextLengthInput ? parseInt(maxContextLengthInput.value) || 4000 : 4000;
+  
+  const pageContent = includePageContent ? extractPageContent(maxContextLength) : null;
   
   if (includePageContent) {
     console.log(`Page content extracted: ${pageContent?.length || 0} characters`);
@@ -521,7 +548,7 @@ function askQuestion(includePageContent) {
   });
 }
 
-function extractPageContent() {
+function extractPageContent(maxContextLength = 4000) {
   const title = document.title;
   const metaDescription = document.querySelector('meta[name="description"]')?.content || '';
   const url = window.location.href;
@@ -546,7 +573,7 @@ function extractPageContent() {
     .replace(/\n\s*\n/g, '\n')
     .trim();
   
-  const truncatedContent = cleanContent.substring(0, 4000);
+  const truncatedContent = cleanContent.substring(0, maxContextLength);
   const result = `URL: ${url}\nTitle: ${title}\nDescription: ${metaDescription}\nContent: ${truncatedContent}`;
   
   console.log(`Content extraction breakdown:
