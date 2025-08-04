@@ -898,7 +898,7 @@ function showLoading(show) {
   
   if (askGeneralBtn) {
     askGeneralBtn.disabled = show;
-    askGeneralBtn.textContent = show ? 'Thinking...' : 'Ask general question';
+    askGeneralBtn.innerHTML = show ? 'Thinking...' : 'Ask general question';
   }
 }
 
