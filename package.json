@@ -1,6 +1,6 @@
 {
   "name": "kagi-fastgpt-sidebar",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "sidebar using Kagi FastGPT API to answer questions about web pages",
   "scripts": {
     "build": "bun run clean && bun run build:chrome && bun run build:firefox",
