@@ -50,8 +50,8 @@ window.initKagiFastGPTSidebar = function() {
         <div class="kagi-setting">
           <div class="kagi-context-length-setting">
             <label for="kagi-max-context-length">Max webpage context (characters):</label>
-            <input type="number" id="kagi-max-context-length" min="1000" step="500" value="4000">
-            <p class="kagi-help">Default: 4000</p>
+            <input type="number" id="kagi-max-context-length" min="1000" max="4000000" step="500" value="400000">
+            <p class="kagi-help">Default: 400000 (~128K tokens). Max: 4000000 (~1M tokens)</p>
           </div>
         </div>
         
@@ -279,7 +279,7 @@ function loadSettings() {
         closeOnClickAwayCheckbox.checked = settings.closeOnClickAway !== false;
       }
       if (maxContextLengthInput) {
-        maxContextLengthInput.value = settings.maxContextLength || 4000;
+        maxContextLengthInput.value = settings.maxContextLength || 400000;
       }
     }
   });
@@ -295,7 +295,7 @@ function saveSettings() {
     removeCitations: removeCitationsCheckbox ? removeCitationsCheckbox.checked : true,
     clearOnHide: clearOnHideCheckbox ? clearOnHideCheckbox.checked : true,
     closeOnClickAway: closeOnClickAwayCheckbox ? closeOnClickAwayCheckbox.checked : true,
-    maxContextLength: maxContextLengthInput ? parseInt(maxContextLengthInput.value) || 4000 : 4000
+    maxContextLength: maxContextLengthInput ? parseInt(maxContextLengthInput.value) || 400000 : 400000
   };
   
   browserAPI.runtime.sendMessage({ action: 'saveSettings', settings }, (response) => {
@@ -510,7 +510,7 @@ function askQuestion(includePageContent) {
   resultsDiv.innerHTML = '';
   
   const maxContextLengthInput = document.getElementById('kagi-max-context-length');
-  const maxContextLength = maxContextLengthInput ? parseInt(maxContextLengthInput.value) || 4000 : 4000;
+  const maxContextLength = maxContextLengthInput ? parseInt(maxContextLengthInput.value) || 400000 : 400000;
   
   const pageContent = includePageContent ? extractPageContent(maxContextLength) : null;
   
@@ -548,7 +548,7 @@ function askQuestion(includePageContent) {
   });
 }
 
-function extractPageContent(maxContextLength = 4000) {
+function extractPageContent(maxContextLength = 400000) {
   const title = document.title;
   const metaDescription = document.querySelector('meta[name="description"]')?.content || '';
   const url = window.location.href;

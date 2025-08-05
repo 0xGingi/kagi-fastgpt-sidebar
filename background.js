@@ -114,7 +114,7 @@ browserAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
         removeCitations: true,
         clearOnHide: true,
         closeOnClickAway: true,
-        maxContextLength: 4000
+        maxContextLength: 400000
       };
       const settings = result.kagiSettings || defaultSettings;
       sendResponse({ settings });
