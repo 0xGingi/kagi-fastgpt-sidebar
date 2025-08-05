@@ -324,7 +324,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 32px;
+  margin-bottom: 8px;
 }
 
 #kagi-query-input {
@@ -401,6 +401,33 @@
   font-weight: 300;
 }
 
+.kagi-results-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.kagi-clear-btn {
+  background: #4a4a4a;
+  color: #ccc;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kagi-clear-btn:hover {
+  background: #5a5a5a;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
 .kagi-results-section {
   flex: 1;
   display: flex;
@@ -408,7 +435,7 @@
   gap: 20px;
   max-height: calc(100vh - 320px);
   overflow-y: auto;
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 .kagi-result {
@@ -419,6 +446,7 @@
   margin-bottom: 20px;
 }
 
+.kagi-question h4,
 .kagi-answer h4,
 .kagi-references h4 {
   margin: 0 0 12px 0;
@@ -427,6 +455,41 @@
   color: #ccc;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.kagi-question {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #555;
+}
+
+.kagi-question-content {
+  color: #e0e0e0;
+  line-height: 1.5;
+  font-style: italic;
+  background: #3a3a3a;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 3px solid #666;
+}
+
+.kagi-result-separator {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #555, transparent);
+  margin: 24px 0;
+  position: relative;
+}
+
+.kagi-result-separator::before {
+  content: '•';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #2d2d2d;
+  color: #666;
+  padding: 0 8px;
+  font-size: 16px;
 }
 
 .kagi-answer-content {

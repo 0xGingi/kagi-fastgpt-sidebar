@@ -76,6 +76,10 @@ window.initKagiFastGPTSidebar = function() {
           <div id="kagi-status-message" class="kagi-status-message"></div>
         </div>
         
+        <div class="kagi-results-header">
+          <button id="kagi-clear-results" class="kagi-clear-btn kagi-hidden">Clear History</button>
+        </div>
+        
         <div id="kagi-results" class="kagi-results-section"></div>
       </div>
       
@@ -120,6 +124,7 @@ function setupEventListeners() {
     const clearOnHideCheckbox = document.getElementById('kagi-clear-on-hide');
     const closeOnClickAwayCheckbox = document.getElementById('kagi-close-on-click-away');
     const maxContextLengthInput = document.getElementById('kagi-max-context-length');
+    const clearResultsBtn = document.getElementById('kagi-clear-results');
     
     if (!closeBtn || !saveKeyBtn || !askPageBtn || !askGeneralBtn || !settingsBtn || !queryInput || !openShortcutsBtn) {
       console.error('Kagi FastGPT: Some UI elements not found when setting up event listeners');
@@ -135,10 +140,7 @@ function setupEventListeners() {
         
         const clearOnHide = document.getElementById('kagi-clear-on-hide');
         if (clearOnHide && clearOnHide.checked) {
-          const queryInput = document.getElementById('kagi-query-input');
-          const resultsDiv = document.getElementById('kagi-results');
-          if (queryInput) queryInput.value = '';
-          if (resultsDiv) resultsDiv.innerHTML = '';
+          clearResults(true);
         }
       }
     });
@@ -226,6 +228,14 @@ function setupEventListeners() {
       });
     }
     
+    if (clearResultsBtn) {
+      clearResultsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        clearResults(false);
+      });
+    }
+    
     console.log('Kagi FastGPT: Event listeners set up successfully');
   }, 100);
 }
@@ -247,10 +257,7 @@ function setupClickAwayHandler() {
     
     const clearOnHide = document.getElementById('kagi-clear-on-hide');
     if (clearOnHide && clearOnHide.checked) {
-      const queryInput = document.getElementById('kagi-query-input');
-      const resultsDiv = document.getElementById('kagi-results');
-      if (queryInput) queryInput.value = '';
-      if (resultsDiv) resultsDiv.innerHTML = '';
+      clearResults(true);
     }
   });
 }
@@ -504,10 +511,10 @@ function askQuestion(includePageContent) {
     return;
   }
   
-  document.getElementById('kagi-query-input').value = '';
+  const queryInput = document.getElementById('kagi-query-input');
+  const originalQuery = queryInput.value;
   
-  const resultsDiv = document.getElementById('kagi-results');
-  resultsDiv.innerHTML = '';
+  queryInput.value = '';
   
   const maxContextLengthInput = document.getElementById('kagi-max-context-length');
   const maxContextLength = maxContextLengthInput ? parseInt(maxContextLengthInput.value) || 400000 : 400000;
@@ -539,8 +546,12 @@ function askQuestion(includePageContent) {
     }
     
     if (response && response.success) {
-      displayResult(response.data);
+      displayResult(response.data, originalQuery, includePageContent);
     } else {
+      const queryInput = document.getElementById('kagi-query-input');
+      if (queryInput) {
+        queryInput.value = originalQuery;
+      }
       const errorMessage = response && response.error ? response.error : 'Request failed';
       console.error('Query failed:', errorMessage, response);
       showMessage(errorMessage, 'error');
@@ -588,17 +599,46 @@ function extractPageContent(maxContextLength = 400000) {
   return result;
 }
 
-function displayResult(data) {
+function displayResult(data, query, includePageContent) {
   const resultsDiv = document.getElementById('kagi-results');
-  resultsDiv.textContent = '';
-  resultsDiv.appendChild(createResultElement(data));
+  const clearBtn = document.getElementById('kagi-clear-results');
+  
+  if (clearBtn) {
+    clearBtn.classList.remove('kagi-hidden');
+  }
+  
+  if (resultsDiv.children.length > 0) {
+    const separator = document.createElement('div');
+    separator.className = 'kagi-result-separator';
+    resultsDiv.appendChild(separator);
+  }
+  
+  resultsDiv.appendChild(createResultElement(data, query, includePageContent));
+  
+  resultsDiv.scrollTop = resultsDiv.scrollHeight;
   
   updateFooterBalance(data.meta);
 }
 
-function createResultElement(data) {
+function createResultElement(data, query, includePageContent) {
   const resultDiv = document.createElement('div');
   resultDiv.className = 'kagi-result';
+  
+  if (query) {
+    const questionDiv = document.createElement('div');
+    questionDiv.className = 'kagi-question';
+    
+    const questionTitle = document.createElement('h4');
+    questionTitle.textContent = includePageContent ? 'Question (with page context):' : 'Question:';
+    questionDiv.appendChild(questionTitle);
+    
+    const questionContent = document.createElement('div');
+    questionContent.className = 'kagi-question-content';
+    questionContent.textContent = query;
+    questionDiv.appendChild(questionContent);
+    
+    resultDiv.appendChild(questionDiv);
+  }
   
   const answerDiv = document.createElement('div');
   answerDiv.className = 'kagi-answer';
@@ -951,6 +991,24 @@ function showShortcutInstructions(instructions) {
   answerDiv.appendChild(contentDiv);
   resultDiv.appendChild(answerDiv);
   resultsDiv.appendChild(resultDiv);
+}
+
+function clearResults(clearInput = false) {
+  const resultsDiv = document.getElementById('kagi-results');
+  const clearBtn = document.getElementById('kagi-clear-results');
+  const queryInput = document.getElementById('kagi-query-input');
+  
+  if (resultsDiv) {
+    resultsDiv.innerHTML = '';
+  }
+  
+  if (clearBtn) {
+    clearBtn.classList.add('kagi-hidden');
+  }
+  
+  if (clearInput && queryInput) {
+    queryInput.value = '';
+  }
 }
 
 function initResizeHandle() {
