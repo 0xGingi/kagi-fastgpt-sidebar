@@ -554,15 +554,17 @@ function displayResult(data, query, includePageContent) {
     clearBtn.classList.remove('kagi-hidden');
   }
   
+  const newResult = createResultElement(data, query, includePageContent);
+  
   if (resultsDiv.children.length > 0) {
     const separator = document.createElement('div');
     separator.className = 'kagi-result-separator';
-    resultsDiv.appendChild(separator);
+    resultsDiv.insertBefore(separator, resultsDiv.firstChild);
   }
   
-  resultsDiv.appendChild(createResultElement(data, query, includePageContent));
+  resultsDiv.insertBefore(newResult, resultsDiv.firstChild);
   
-  resultsDiv.scrollTop = resultsDiv.scrollHeight;
+  resultsDiv.scrollTop = 0;
   
   updateFooterBalance(data.meta);
 }
