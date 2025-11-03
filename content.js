@@ -1,8 +1,26 @@
 (function() {
 let sidebarInitialized = false;
 let isProcessingRequest = false;
+let suppressClickAwayUntil = 0;
+let currentOrigin = null;
+let pendingSelectionText = null;
 
 const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
+function sendMessage(action, payload = {}) {
+  return new Promise((resolve) => {
+    try {
+      const msg = { action, ...payload };
+      if (browserAPI.runtime?.sendMessage?.length === 1) {
+        browserAPI.runtime.sendMessage(msg).then(resolve).catch(() => resolve(undefined));
+      } else {
+        browserAPI.runtime.sendMessage(msg, (response) => resolve(response));
+      }
+    } catch {
+      resolve(undefined);
+    }
+  });
+}
 
 window.initKagiFastGPTSidebar = function() {
   if (sidebarInitialized) return;
@@ -47,10 +65,35 @@ window.initKagiFastGPTSidebar = function() {
         </div>
         
         <div class="kagi-setting">
+          <label class="kagi-checkbox-label" title="Store API key in synced storage across devices">
+            <input type="checkbox" id="kagi-sync-api-key">
+            <span>Sync API key across devices</span>
+          </label>
+        </div>
+        
+        <div class="kagi-setting">
           <div class="kagi-context-length-setting">
             <label for="kagi-max-context-length">Max webpage context (characters):</label>
             <input type="number" id="kagi-max-context-length" min="1000" max="4000000" step="500" value="400000">
             <p class="kagi-help">Default: 400000 (~128K tokens). Max: 4000000 (~1M tokens)</p>
+          </div>
+        </div>
+        
+        <div class="kagi-setting">
+          <div class="kagi-context-length-setting">
+            <label for="kagi-theme">Theme:</label>
+            <select id="kagi-theme">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="kagi-setting">
+          <div class="kagi-context-length-setting">
+            <label for="kagi-blocked-sites">Blocklist (domains, comma-separated):</label>
+            <input type="text" id="kagi-blocked-sites" placeholder="e.g., accounts.google.com, mail.google.com" />
+            <p class="kagi-help">Prevents sidebar injection on listed sites</p>
           </div>
         </div>
         
@@ -71,6 +114,7 @@ window.initKagiFastGPTSidebar = function() {
           <div class="kagi-query-buttons">
             <button id="kagi-ask-page" class="kagi-default-action">Ask about this page <span class="kagi-enter-hint">⏎</span></button>
             <button id="kagi-ask-general">Ask general question</button>
+            <button id="kagi-cancel" class="kagi-clear-btn kagi-hidden" type="button">Cancel</button>
           </div>
           <div id="kagi-status-message" class="kagi-status-message"></div>
         </div>
@@ -96,6 +140,8 @@ window.initKagiFastGPTSidebar = function() {
   checkApiKey();
   loadKeybindDisplay();
   loadSettings();
+  currentOrigin = window.location.origin;
+  loadConversation();
   initResizeHandle();
   
   sidebarInitialized = true;
@@ -123,6 +169,11 @@ function setupEventListeners() {
     const closeOnClickAwayCheckbox = document.getElementById('kagi-close-on-click-away');
     const maxContextLengthInput = document.getElementById('kagi-max-context-length');
     const clearResultsBtn = document.getElementById('kagi-clear-results');
+    const cancelBtn = document.getElementById('kagi-cancel');
+    const themeSelect = document.getElementById('kagi-theme');
+    const syncKeyCheckbox = document.getElementById('kagi-sync-api-key');
+    const blockedSitesInput = document.getElementById('kagi-blocked-sites');
+    const apiKeyInput = document.getElementById('kagi-api-key');
     
     if (!closeBtn || !saveKeyBtn || !askPageBtn || !askGeneralBtn || !settingsBtn || !queryInput || !openShortcutsBtn) {
       console.error('Kagi FastGPT: Some UI elements not found when setting up event listeners');
@@ -161,6 +212,17 @@ function setupEventListeners() {
       askQuestion(false);
     });
     
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await sendMessage('cancelQuery');
+        isProcessingRequest = false;
+        showLoading(false);
+        showMessage('Canceled', 'error');
+      });
+    }
+    
     settingsBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -181,17 +243,11 @@ function setupEventListeners() {
     openShortcutsBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      browserAPI.runtime.sendMessage({ action: 'openShortcutsPage' }, (response) => {
-        if (browserAPI.runtime.lastError) {
-          console.error('Runtime error opening shortcuts page:', browserAPI.runtime.lastError);
-          showMessage('Failed to open shortcuts page', 'error');
-          return;
-        }
-        
+      sendMessage('openShortcutsPage').then((response) => {
         if (response && !response.success) {
           if (response.showInstructions && response.instructions) {
             showShortcutInstructions(response.instructions);
-          } else if (response.error) {
+          } else if (response && response.error) {
             showMessage(response.error, 'error');
           }
         }
@@ -226,6 +282,41 @@ function setupEventListeners() {
         clearResults(false);
       });
     }
+
+    if (themeSelect) {
+      themeSelect.addEventListener('change', (e) => {
+        saveSettings();
+      });
+    }
+
+    if (syncKeyCheckbox) {
+      syncKeyCheckbox.addEventListener('change', (e) => {
+        saveSettings();
+      });
+    }
+
+    if (blockedSitesInput) {
+      blockedSitesInput.addEventListener('change', (e) => {
+        saveSettings();
+      });
+    }
+
+    if (apiKeyInput) {
+      apiKeyInput.addEventListener('keydown', () => {
+        if (apiKeyInput.dataset.masked === 'true') {
+          apiKeyInput.value = '';
+          apiKeyInput.dataset.masked = 'false';
+        }
+      });
+      apiKeyInput.addEventListener('paste', (e) => {
+        if (apiKeyInput.dataset.masked === 'true') {
+          e.preventDefault();
+          const text = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+          apiKeyInput.value = text;
+          apiKeyInput.dataset.masked = 'false';
+        }
+      });
+    }
     
     console.log('Kagi FastGPT: Event listeners set up successfully');
   }, 100);
@@ -242,6 +333,8 @@ function setupClickAwayHandler() {
     
     if (sidebar.classList.contains('kagi-sidebar-hidden')) return;
     
+    if (Date.now() < suppressClickAwayUntil) return;
+
     if (sidebar.contains(e.target)) return;
     
     sidebar.classList.add('kagi-sidebar-hidden');
@@ -251,22 +344,47 @@ function setupClickAwayHandler() {
       clearResults(true);
     }
   });
+  document.addEventListener('contextmenu', (e) => {
+    const sidebar = document.getElementById('kagi-fastgpt-sidebar');
+    if (!sidebar) return;
+    if (sidebar.contains(e.target)) return;
+    suppressClickAway(1500);
+    try {
+      document.documentElement.setAttribute('data-kagi-cm', '1');
+      setTimeout(() => document.documentElement.removeAttribute('data-kagi-cm'), 2000);
+    } catch {}
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const sidebar = document.getElementById('kagi-fastgpt-sidebar');
+      if (sidebar && !sidebar.classList.contains('kagi-sidebar-hidden')) {
+        sidebar.classList.add('kagi-sidebar-hidden');
+        const clearOnHide = document.getElementById('kagi-clear-on-hide');
+        if (clearOnHide && clearOnHide.checked) {
+          clearResults(true);
+        }
+      }
+    }
+  });
 }
 
+function suppressClickAway(ms = 800) {
+  suppressClickAwayUntil = Date.now() + Math.max(0, ms | 0);
+}
+window.kagiSuppressClickAway = suppressClickAway;
+
 function loadSettings() {
-  browserAPI.runtime.sendMessage({ action: 'getSettings' }, (response) => {
-    if (browserAPI.runtime.lastError) {
-      console.error('Runtime error getting settings:', browserAPI.runtime.lastError);
-      return;
-    }
-    
+  sendMessage('getSettings').then((response) => {
     if (response && response.settings) {
       const settings = response.settings;
       const removeCitationsCheckbox = document.getElementById('kagi-remove-citations');
       const clearOnHideCheckbox = document.getElementById('kagi-clear-on-hide');
       const closeOnClickAwayCheckbox = document.getElementById('kagi-close-on-click-away');
       const maxContextLengthInput = document.getElementById('kagi-max-context-length');
-      
+      const themeSelect = document.getElementById('kagi-theme');
+      const syncKeyCheckbox = document.getElementById('kagi-sync-api-key');
+      const blockedSitesInput = document.getElementById('kagi-blocked-sites');
+
       if (removeCitationsCheckbox) {
         removeCitationsCheckbox.checked = settings.removeCitations !== false;
       }
@@ -279,6 +397,16 @@ function loadSettings() {
       if (maxContextLengthInput) {
         maxContextLengthInput.value = settings.maxContextLength || 400000;
       }
+      if (themeSelect) {
+        themeSelect.value = settings.theme || 'dark';
+        applyTheme(themeSelect.value);
+      }
+      if (syncKeyCheckbox) {
+        syncKeyCheckbox.checked = !!settings.syncApiKey;
+      }
+      if (blockedSitesInput) {
+        blockedSitesInput.value = (settings.blockedSites || []).join(', ');
+      }
     }
   });
 }
@@ -288,33 +416,31 @@ function saveSettings() {
   const clearOnHideCheckbox = document.getElementById('kagi-clear-on-hide');
   const closeOnClickAwayCheckbox = document.getElementById('kagi-close-on-click-away');
   const maxContextLengthInput = document.getElementById('kagi-max-context-length');
+  const themeSelect = document.getElementById('kagi-theme');
+  const syncKeyCheckbox = document.getElementById('kagi-sync-api-key');
+  const blockedSitesInput = document.getElementById('kagi-blocked-sites');
   
   const settings = {
     removeCitations: removeCitationsCheckbox ? removeCitationsCheckbox.checked : true,
     clearOnHide: clearOnHideCheckbox ? clearOnHideCheckbox.checked : true,
     closeOnClickAway: closeOnClickAwayCheckbox ? closeOnClickAwayCheckbox.checked : true,
-    maxContextLength: maxContextLengthInput ? parseInt(maxContextLengthInput.value) || 400000 : 400000
+    maxContextLength: maxContextLengthInput ? parseInt(maxContextLengthInput.value) || 400000 : 400000,
+    theme: themeSelect ? themeSelect.value : 'dark',
+    syncApiKey: syncKeyCheckbox ? !!syncKeyCheckbox.checked : false,
+    blockedSites: blockedSitesInput && blockedSitesInput.value
+      ? blockedSitesInput.value.split(',').map(s => s.trim()).filter(Boolean)
+      : []
   };
   
-  browserAPI.runtime.sendMessage({ action: 'saveSettings', settings }, (response) => {
-    if (browserAPI.runtime.lastError) {
-      console.error('Runtime error saving settings:', browserAPI.runtime.lastError);
-      return;
-    }
-    
+  sendMessage('saveSettings', { settings }).then((response) => {
     if (response && response.success) {
-      console.log('Settings saved successfully');
+      applyTheme(settings.theme);
     }
   });
 }
 
 function checkApiKey() {
-  browserAPI.runtime.sendMessage({ action: 'getApiKey' }, (response) => {
-    if (browserAPI.runtime.lastError) {
-      console.error('Runtime error getting API key:', browserAPI.runtime.lastError);
-      return;
-    }
-    
+  sendMessage('getApiKey').then((response) => {
     if (response && response.apiKey) {
       document.getElementById('kagi-api-setup').classList.add('kagi-hidden');
       document.getElementById('kagi-chat-interface').classList.remove('kagi-hidden');
@@ -334,17 +460,14 @@ function checkApiKey() {
 }
 
 function loadKeybindDisplay() {
-  browserAPI.runtime.sendMessage({ action: 'getKeybind' }, (response) => {
-    if (browserAPI.runtime.lastError) {
-      console.error('Runtime error getting keybind:', browserAPI.runtime.lastError);
-      return;
-    }
-    
+  sendMessage('getKeybind').then((response) => {
     const keybindDisplay = document.getElementById('kagi-keybind-display');
-    if (response && response.shortcut) {
-      keybindDisplay.textContent = response.shortcut;
-    } else {
-      keybindDisplay.textContent = 'Not set';
+    if (keybindDisplay) {
+      if (response && response.shortcut) {
+        keybindDisplay.textContent = response.shortcut;
+      } else {
+        keybindDisplay.textContent = 'Not set';
+      }
     }
   });
 }
@@ -352,24 +475,23 @@ function loadKeybindDisplay() {
 
 function saveApiKey() {
   const apiKeyInput = document.getElementById('kagi-api-key');
-  let apiKey = apiKeyInput.value.trim();
-  
+  const typedValue = (apiKeyInput.value || '').trim();
+
+  let apiKey = typedValue;
+
   if (apiKeyInput.dataset.masked === 'true' && apiKeyInput.dataset.actualKey) {
-    apiKey = apiKeyInput.dataset.actualKey;
+    const onlyMaskedChars = typedValue.length > 0 && /^[*]+$/.test(typedValue);
+    if (onlyMaskedChars) {
+      apiKey = apiKeyInput.dataset.actualKey;
+    }
   }
-  
-  if (!apiKey || apiKey === '*'.repeat(apiKey.length)) {
+
+  if (!apiKey || /^[*]+$/.test(apiKey)) {
     showMessage('Please enter an API key', 'error');
     return;
   }
-  
-  browserAPI.runtime.sendMessage({ action: 'saveApiKey', apiKey }, (response) => {
-    if (browserAPI.runtime.lastError) {
-      console.error('Runtime error saving API key:', browserAPI.runtime.lastError);
-      showMessage('Failed to save API key: ' + browserAPI.runtime.lastError.message, 'error');
-      return;
-    }
-    
+
+  sendMessage('saveApiKey', { apiKey }).then((response) => {
     if (response && response.success) {
       document.getElementById('kagi-api-setup').classList.add('kagi-hidden');
       document.getElementById('kagi-chat-interface').classList.remove('kagi-hidden');
@@ -378,12 +500,12 @@ function saveApiKey() {
         settingsBtn.textContent = 'Settings';
       }
       showMessage('API key saved successfully!', 'success');
-      
+
       apiKeyInput.dataset.actualKey = apiKey;
       apiKeyInput.value = '*'.repeat(Math.min(apiKey.length, 32));
       apiKeyInput.type = 'password';
       apiKeyInput.dataset.masked = 'true';
-      
+
       setTimeout(() => {
         const queryInput = document.getElementById('kagi-query-input');
         if (queryInput) {
@@ -424,14 +546,8 @@ function showSettings() {
 }
 
 function loadApiKeyForSettings() {
-  browserAPI.runtime.sendMessage({ action: 'getApiKey' }, (response) => {
-    if (browserAPI.runtime.lastError) {
-      console.error('Runtime error getting API key:', browserAPI.runtime.lastError);
-      return;
-    }
-    
+  sendMessage('getApiKey').then((response) => {
     const apiKeyInput = document.getElementById('kagi-api-key');
-    
     if (response && response.apiKey && apiKeyInput) {
       apiKeyInput.dataset.actualKey = response.apiKey;
       apiKeyInput.value = '*'.repeat(Math.min(response.apiKey.length, 32));
@@ -466,7 +582,19 @@ function askQuestion(includePageContent) {
   const maxContextLengthInput = document.getElementById('kagi-max-context-length');
   const maxContextLength = maxContextLengthInput ? parseInt(maxContextLengthInput.value) || 400000 : 400000;
   
-  const pageContent = includePageContent ? extractPageContent(maxContextLength) : null;
+  let pageContent = null;
+  if (includePageContent) {
+    let selectionText = (pendingSelectionText && pendingSelectionText.trim()) || '';
+    if (!selectionText && window.getSelection) {
+      try { selectionText = (window.getSelection().toString() || '').trim(); } catch {}
+    }
+    if (selectionText) {
+      pageContent = selectionText.substring(0, maxContextLength);
+      showMessage(`Including selection as context (${pageContent.length} chars).`, 'success', true);
+    } else {
+      pageContent = extractPageContent(maxContextLength);
+    }
+  }
   
   if (includePageContent) {
     console.log(`Page content extracted: ${pageContent?.length || 0} characters`);
@@ -477,20 +605,10 @@ function askQuestion(includePageContent) {
   isProcessingRequest = true;
   showLoading(true);
   
-  browserAPI.runtime.sendMessage({
-    action: 'queryFastGPT',
-    query,
-    pageContent
-  }, (response) => {
+  sendMessage('queryFastGPT', { query, pageContent }).then((response) => {
     showLoading(false);
     clearMessage();
     isProcessingRequest = false;
-    
-    if (browserAPI.runtime.lastError) {
-      console.error('Runtime error:', browserAPI.runtime.lastError);
-      showMessage('Extension communication error: ' + browserAPI.runtime.lastError.message, 'error');
-      return;
-    }
     
     if (response && response.success) {
       displayResult(response.data, originalQuery, includePageContent);
@@ -499,7 +617,7 @@ function askQuestion(includePageContent) {
       if (queryInput) {
         queryInput.value = originalQuery;
       }
-      const errorMessage = response && response.error ? response.error : 'Request failed';
+      const errorMessage = response && response.error != null ? String(response.error) : 'Request failed';
       console.error('Query failed:', errorMessage, response);
       showMessage(errorMessage, 'error');
     }
@@ -567,6 +685,19 @@ function displayResult(data, query, includePageContent) {
   resultsDiv.scrollTop = 0;
   
   updateFooterBalance(data.meta);
+
+  try {
+    const item = {
+      q: query,
+      includePage: !!includePageContent,
+      output: data.output,
+      tokens: data.tokens,
+      references: data.references,
+      meta: data.meta,
+      ts: Date.now()
+    };
+    sendMessage('saveConversation', { origin: currentOrigin || window.location.origin, item });
+  } catch {}
 }
 
 function createResultElement(data, query, includePageContent) {
@@ -887,21 +1018,22 @@ function clearMessage() {
 function showLoading(show) {
   const askPageBtn = document.getElementById('kagi-ask-page');
   const askGeneralBtn = document.getElementById('kagi-ask-general');
+  const cancelBtn = document.getElementById('kagi-cancel');
   
   if (askPageBtn) {
     askPageBtn.disabled = show;
-    if (show) {
-      askPageBtn.textContent = 'Thinking...';
-      askPageBtn.classList.remove('kagi-default-action');
-    } else {
-      askPageBtn.innerHTML = 'Ask about this page <span class="kagi-enter-hint">⏎</span>';
-      askPageBtn.classList.add('kagi-default-action');
-    }
+    askPageBtn.innerHTML = 'Ask about this page <span class="kagi-enter-hint">⏎</span>';
+    if (!show) askPageBtn.classList.add('kagi-default-action');
+    else askPageBtn.classList.remove('kagi-default-action');
   }
   
   if (askGeneralBtn) {
     askGeneralBtn.disabled = show;
     askGeneralBtn.textContent = show ? 'Thinking...' : 'Ask general question';
+  }
+
+  if (cancelBtn) {
+    cancelBtn.classList.toggle('kagi-hidden', !show);
   }
 }
 
@@ -924,15 +1056,6 @@ function showShortcutInstructions(instructions) {
   contentDiv.className = 'kagi-answer-content';
   
   const preElement = document.createElement('pre');
-  preElement.style.whiteSpace = 'pre-wrap';
-  preElement.style.fontFamily = 'inherit';
-  preElement.style.fontSize = '13px';
-  preElement.style.lineHeight = '1.6';
-  preElement.style.color = '#ccc';
-  preElement.style.background = '#3a3a3a';
-  preElement.style.padding = '16px';
-  preElement.style.borderRadius = '6px';
-  preElement.style.margin = '12px 0';
   preElement.textContent = instructions;
   
   contentDiv.appendChild(preElement);
@@ -958,6 +1081,9 @@ function clearResults(clearInput = false) {
   if (clearInput && queryInput) {
     queryInput.value = '';
   }
+  try {
+    sendMessage('clearConversation', { origin: currentOrigin || window.location.origin });
+  } catch {}
 }
 
 function initResizeHandle() {
@@ -1010,4 +1136,83 @@ function initResizeHandle() {
     sidebar.style.width = savedWidth;
   }
 }
+
+function loadConversation() {
+  sendMessage('loadConversation', { origin: window.location.origin }).then((resp) => {
+    if (!resp || !resp.items || !Array.isArray(resp.items)) return;
+    const resultsDiv = document.getElementById('kagi-results');
+    if (!resultsDiv) return;
+    for (const item of resp.items) {
+      const data = {
+        output: item.output,
+        tokens: item.tokens,
+        references: item.references,
+        meta: item.meta
+      };
+      const resultEl = createResultElement(data, item.q, item.includePage);
+      resultsDiv.appendChild(resultEl);
+    }
+    if (resp.items.length > 0) {
+      const clearBtn = document.getElementById('kagi-clear-results');
+      if (clearBtn) clearBtn.classList.remove('kagi-hidden');
+    }
+  });
+}
+
+function applyTheme(theme) {
+  const sidebar = document.getElementById('kagi-fastgpt-sidebar');
+  if (!sidebar) return;
+  if (theme === 'light') sidebar.classList.add('kagi-light');
+  else sidebar.classList.remove('kagi-light');
+}
+
+try {
+  browserAPI.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+    if (request && request.action === 'kagi_trigger_query') {
+      const mode = request.mode;
+      if (mode === 'kagi-fastgpt-selection') {
+        askQuestion(true);
+      } else if (mode === 'kagi-fastgpt-page') {
+        askQuestion(true);
+      }
+      sendResponse({ ok: true });
+      return true;
+    }
+    if (request && request.action === 'kagi_show_sidebar') {
+      try {
+        pendingSelectionText = request.selectionText || null;
+      } catch {}
+      try {
+        const sidebar = document.getElementById('kagi-fastgpt-sidebar');
+        if (sidebar && sidebar.classList.contains('kagi-sidebar-hidden')) {
+          sidebar.classList.remove('kagi-sidebar-hidden');
+        }
+        const setup = document.getElementById('kagi-api-setup');
+        const chatInterface = document.getElementById('kagi-chat-interface');
+        const settingsBtn = document.getElementById('kagi-settings-btn');
+        if (setup && chatInterface) {
+          setup.classList.add('kagi-hidden');
+          chatInterface.classList.remove('kagi-hidden');
+          if (settingsBtn) settingsBtn.textContent = 'Settings';
+        }
+        if (typeof window.kagiSuppressClickAway === 'function') {
+          window.kagiSuppressClickAway(1200);
+        }
+        const queryInput = document.getElementById('kagi-query-input');
+        if (queryInput) {
+          queryInput.focus();
+        }
+        if (pendingSelectionText) {
+          showMessage('Selection captured. Type your question and press Enter.', 'success', true);
+        }
+      } catch {}
+      sendResponse({ ok: true });
+      return true;
+    }
+    if (request && request.action === 'kagi_probe') {
+      sendResponse({ hasSidebar: !!document.getElementById('kagi-fastgpt-sidebar') });
+      return true;
+    }
+  });
+} catch {}
 })();

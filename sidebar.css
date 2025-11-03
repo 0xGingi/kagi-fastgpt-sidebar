@@ -6,8 +6,30 @@
   min-width: 300px;
   max-width: 800px;
   height: 100vh;
-  background: #2d2d2d;
-  border-left: 1px solid #444;
+  /* Theme tokens */
+  --bg: #2d2d2d;
+  --bg-muted: #2a2a2a;
+  --bg-subtle: #3a3a3a;
+  --text: #ffffff;
+  --text-muted: #ccc;
+  --text-dim: #999;
+  --link: #ffffff;
+  --border: #444;
+  --border-subtle: #555;
+  --btn: #4a4a4a;
+  --btn-hover: #5a5a5a;
+  --btn-text: #ffffff;
+  --btn-disabled: #9ca3af;
+  --input-bg: #3a3a3a;
+  --input-border: #555;
+  --inline-code-bg: #4a4a4a;
+  --inline-code-border: #555;
+  --focus-ring: rgba(255, 255, 255, 0.1);
+  --resizer-hover: rgba(255, 255, 255, 0.1);
+  --resizer-bar: rgba(255, 255, 255, 0.3);
+
+  background: var(--bg);
+  border-left: 1px solid var(--border);
   z-index: 999999;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
@@ -15,7 +37,7 @@
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  color: #ffffff;
+  color: var(--text);
   resize: horizontal;
   overflow: hidden;
 }
@@ -37,7 +59,7 @@
 }
 
 .kagi-resize-handle:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--resizer-hover);
 }
 
 .kagi-resize-handle::before {
@@ -48,7 +70,7 @@
   transform: translateY(-50%);
   width: 2px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--resizer-bar);
   border-radius: 1px;
   opacity: 0;
   transition: opacity 0.2s;
@@ -63,26 +85,26 @@
 }
 
 .kagi-sidebar-header {
-  background: #2a2a2a;
-  color: white;
+  background: var(--bg-muted);
+  color: var(--text);
   padding: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #444;
+  border-bottom: 1px solid var(--border);
 }
 
 .kagi-sidebar-header h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 400;
-  color: #ffffff;
+  color: var(--text);
 }
 
 #kagi-close-btn {
   background: none;
   border: none;
-  color: white;
+  color: var(--text);
   font-size: 24px;
   cursor: pointer;
   padding: 0;
@@ -96,7 +118,7 @@
 }
 
 #kagi-close-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--resizer-hover);
 }
 
 .kagi-sidebar-content {
@@ -106,7 +128,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #2d2d2d;
+  background: var(--bg);
   min-height: 0;
 }
 
@@ -123,7 +145,7 @@
 
 .kagi-section p {
   margin: 0;
-  color: #ccc;
+  color: var(--text-muted);
 }
 
 .kagi-help {
@@ -131,7 +153,7 @@
 }
 
 .kagi-help a {
-  color: #ffffff;
+  color: var(--link);
   text-decoration: underline;
 }
 
@@ -142,7 +164,7 @@
 .kagi-setting {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #444;
+  border-top: 1px solid var(--border);
 }
 
 .kagi-checkbox-label {
@@ -150,19 +172,19 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  color: #ccc;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
 .kagi-checkbox-label input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: #ffffff;
+  accent-color: currentColor;
   cursor: pointer;
 }
 
 .kagi-checkbox-label:hover {
-  color: #fff;
+  color: var(--text);
 }
 
 .kagi-context-length-setting {
@@ -172,26 +194,33 @@
 }
 
 .kagi-context-length-setting label {
-  color: #ccc;
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 500;
 }
 
-#kagi-max-context-length {
+#kagi-max-context-length,
+#kagi-blocked-sites,
+#kagi-theme {
   padding: 8px 12px;
-  border: 1px solid #444;
+  border: 1px solid var(--input-border);
   border-radius: 6px;
   font-size: 13px;
-  background: #2a2a2a;
-  color: #fff;
+  background: var(--input-bg);
+  color: var(--text);
   transition: all 0.2s;
+}
+
+#kagi-max-context-length {
   width: 100px;
 }
 
-#kagi-max-context-length:focus {
+#kagi-max-context-length:focus,
+#kagi-blocked-sites:focus,
+#kagi-theme:focus {
   outline: none;
-  border-color: #666;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  border-color: var(--border);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 .kagi-keybind-info {
@@ -200,25 +229,25 @@
 
 .kagi-keybind-info p {
   margin: 0 0 8px 0;
-  color: #ccc;
+  color: var(--text-muted);
 }
 
 #kagi-keybind-display {
-  background: #3a3a3a;
-  border: 1px solid #555;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
   padding: 8px 12px;
   border-radius: 6px;
   font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
   font-size: 13px;
-  color: #fff;
+  color: var(--text);
   text-align: center;
   margin-bottom: 12px;
   font-weight: 500;
 }
 
 #kagi-open-shortcuts {
-  background: #4a4a4a;
-  color: #ffffff;
+  background: var(--btn);
+  color: var(--btn-text);
   border: none;
   padding: 8px 16px;
   border-radius: 6px;
@@ -228,7 +257,7 @@
 }
 
 #kagi-open-shortcuts:hover {
-  background: #5a5a5a;
+  background: var(--btn-hover);
   transform: translateY(-1px);
 }
 
@@ -242,11 +271,11 @@
   flex: 1;
   padding: 14px 16px;
   padding-right: 50px;
-  border: 1px solid #444;
+  border: 1px solid var(--input-border);
   border-radius: 6px;
   font-size: 14px;
-  background: #2a2a2a;
-  color: #fff;
+  background: var(--input-bg);
+  color: var(--text);
   transition: all 0.2s;
 }
 
@@ -257,7 +286,7 @@
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #ccc;
+  color: var(--text-dim);
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
@@ -274,22 +303,22 @@
 }
 
 .kagi-toggle-key-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--resizer-hover);
+  color: var(--text);
 }
 
 #kagi-api-key:focus {
   outline: none;
-  border-color: #666;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  border-color: var(--border);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 #kagi-save-key,
 #kagi-ask-page,
 #kagi-ask-general,
 #kagi-settings-btn {
-  background: #4a4a4a;
-  color: #ffffff;
+  background: var(--btn);
+  color: var(--btn-text);
   border: none;
   padding: 14px 20px;
   border-radius: 8px;
@@ -309,19 +338,19 @@
 #kagi-ask-page:hover,
 #kagi-ask-general:hover,
 #kagi-settings-btn:hover {
-  background: #5a5a5a;
+  background: var(--btn-hover);
   transform: translateY(-1px);
 }
 
 #kagi-save-key:disabled,
 #kagi-ask-general:disabled {
-  background: #9ca3af;
+  background: var(--btn-disabled);
   cursor: not-allowed;
 }
 
 #kagi-ask-page:disabled {
-  background: #9ca3af !important;
-  border-color: #888 !important;
+  background: var(--btn-disabled) !important;
+  border-color: var(--border) !important;
   cursor: not-allowed;
 }
 
@@ -338,12 +367,12 @@
   min-height: 90px;
   max-height: 150px;
   padding: 16px;
-  border: 1px solid #555;
+  border: 1px solid var(--input-border);
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
-  background: #3a3a3a;
-  color: #fff;
+  background: var(--input-bg);
+  color: var(--text);
   resize: vertical;
   transition: all 0.2s;
   box-sizing: border-box;
@@ -352,12 +381,12 @@
 
 #kagi-query-input:focus {
   outline: none;
-  border-color: #666;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  border-color: var(--border);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 #kagi-query-input::placeholder {
-  color: #888;
+  color: var(--text-dim);
 }
 
 .kagi-query-buttons {
@@ -379,7 +408,7 @@
   margin-top: 8px;
   text-align: center;
   font-size: 12px;
-  color: #bbb;
+  color: var(--text-dim);
   transition: all 0.2s;
 }
 
@@ -392,21 +421,16 @@
 }
 
 #kagi-ask-page.kagi-default-action {
-  border: 2px solid #888 !important;
-  background: #6a6a6a !important;
+  border: 2px solid var(--border-subtle) !important;
+  background: var(--btn-hover) !important;
 }
 
 #kagi-ask-page.kagi-default-action:hover {
-  border-color: #999 !important;
-  background: #7a7a7a !important;
+  border-color: var(--border) !important;
+  background: var(--btn) !important;
 }
 
-.kagi-enter-hint {
-  opacity: 0.7;
-  font-size: 11px;
-  margin-left: 6px;
-  font-weight: 300;
-}
+/* moved to end with theme-aware color */
 
 .kagi-results-header {
   display: flex;
@@ -416,8 +440,8 @@
 }
 
 .kagi-clear-btn {
-  background: #4a4a4a;
-  color: #ccc;
+  background: var(--btn);
+  color: var(--btn-text);
   border: none;
   padding: 6px 12px;
   border-radius: 6px;
@@ -430,8 +454,8 @@
 }
 
 .kagi-clear-btn:hover {
-  background: #5a5a5a;
-  color: #fff;
+  background: var(--btn-hover);
+  color: var(--btn-text);
   transform: translateY(-1px);
 }
 
@@ -447,8 +471,8 @@
 }
 
 .kagi-result {
-  background: #3a3a3a;
-  border: 1px solid #555;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 0;
@@ -460,7 +484,7 @@
   margin: 0 0 12px 0;
   font-size: 14px;
   font-weight: 400;
-  color: #ccc;
+  color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -468,22 +492,22 @@
 .kagi-question {
   margin-bottom: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #555;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .kagi-question-content {
-  color: #e0e0e0;
+  color: var(--text);
   line-height: 1.5;
   font-style: italic;
-  background: #3a3a3a;
+  background: var(--bg-subtle);
   padding: 12px;
   border-radius: 6px;
-  border-left: 3px solid #666;
+  border-left: 3px solid var(--border);
 }
 
 .kagi-result-separator {
   height: 1px;
-  background: linear-gradient(to right, transparent, #555, transparent);
+  background: linear-gradient(to right, transparent, var(--border-subtle), transparent);
   margin: 8px 0;
   position: relative;
 }
@@ -494,25 +518,44 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  background: #2d2d2d;
-  color: #666;
+  background: var(--bg);
+  color: var(--text-dim);
   padding: 0 8px;
   font-size: 16px;
 }
 
 .kagi-answer-content {
-  color: #f0f0f0;
+  color: var(--text);
   line-height: 1.6;
 }
 
+/* Block code styling */
+.kagi-answer-content pre {
+  background: var(--bg-subtle);
+  color: var(--text);
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 12px 0;
+  border: 1px solid var(--inline-code-border);
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-size: 13px;
+  font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.kagi-answer-content pre code {
+  color: inherit;
+  background: transparent;
+}
+
 .kagi-answer-content .kagi-inline-code {
-  background: #4a4a4a;
-  color: #ffffff;
+  background: var(--inline-code-bg);
+  color: var(--text);
   padding: 2px 6px;
   border-radius: 4px;
   font-family: 'Monaco', 'Consolas', monospace;
   font-size: 13px;
-  border: 1px solid #555;
+  border: 1px solid var(--inline-code-border);
 }
 
 .kagi-answer-content .kagi-answer-list {
@@ -522,23 +565,23 @@
 
 .kagi-answer-content .kagi-answer-list li {
   margin: 6px 0;
-  color: #f0f0f0;
+  color: var(--text);
 }
 
 .kagi-answer-content strong {
-  color: #fff;
+  color: var(--text);
   font-weight: 600;
 }
 
 .kagi-answer-content em {
-  color: #ddd;
+  color: var(--text-dim);
   font-style: italic;
 }
 
 .kagi-references {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #555;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .kagi-references ul {
@@ -550,13 +593,13 @@
 .kagi-references li {
   margin-bottom: 12px;
   padding: 12px;
-  background: #2a2a2a;
+  background: var(--bg-muted);
   border-radius: 6px;
-  border: 1px solid #555;
+  border: 1px solid var(--border-subtle);
 }
 
 .kagi-references a {
-  color: #ffffff;
+  color: var(--link);
   text-decoration: underline;
   font-weight: 400;
   font-size: 13px;
@@ -571,47 +614,47 @@
 .kagi-references p {
   margin: 0;
   font-size: 12px;
-  color: #bbb;
+  color: var(--text-muted);
   line-height: 1.4;
 }
 
 .kagi-meta {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid #555;
+  border-top: 1px solid var(--border-subtle);
   text-align: center;
 }
 
 .kagi-meta small {
-  color: #999;
+  color: var(--text-dim);
   font-size: 11px;
 }
 
 .kagi-footer {
-  border-top: 1px solid #444;
+  border-top: 1px solid var(--border);
   padding: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #2d2d2d;
+  background: var(--bg);
 }
 
 #kagi-settings-btn {
-  background: #4a4a4a;
-  color: #fff;
+  background: var(--btn);
+  color: var(--btn-text);
   font-size: 12px;
   padding: 10px 14px;
 }
 
 #kagi-settings-btn:hover {
-  background: #555;
-  color: #fff;
+  background: var(--btn-hover);
+  color: var(--btn-text);
   transform: translateY(-1px);
 }
 
 .kagi-cost-info {
   font-size: 11px;
-  color: #999;
+  color: var(--text-dim);
 }
 
 .kagi-message {
@@ -628,8 +671,8 @@
 }
 
 .kagi-message-success {
-  background: #4a4a4a;
-  color: #ffffff;
+  background: var(--btn);
+  color: var(--btn-text);
   font-weight: 400;
 }
 
@@ -658,4 +701,36 @@
   .kagi-query-buttons button {
     flex: none;
   }
-} 
+}
+
+/* Light theme: override tokens */
+#kagi-fastgpt-sidebar.kagi-light {
+  --bg: #ffffff;
+  --bg-muted: #f8fafc; /* header/references bg */
+  --bg-subtle: #ffffff; /* cards */
+  --text: #111827; /* gray-900 */
+  --text-muted: #374151; /* gray-700 */
+  --text-dim: #6b7280; /* gray-500 */
+  --link: #2563eb; /* blue-600 */
+  --border: #d1d5db; /* gray-300 */
+  --border-subtle: #e5e7eb; /* gray-200 */
+  --btn: #111827; /* dark button */
+  --btn-hover: #1f2937; /* hover */
+  --btn-text: #ffffff; /* white text on dark btn */
+  --btn-disabled: #9ca3af; /* gray-400 */
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --inline-code-bg: #f3f4f6;
+  --inline-code-border: #d1d5db;
+  --focus-ring: rgba(37, 99, 235, 0.2); /* blue ring */
+  --resizer-hover: rgba(0, 0, 0, 0.08);
+  --resizer-bar: rgba(0, 0, 0, 0.2);
+}
+
+.kagi-enter-hint {
+  opacity: 0.7;
+  font-size: 11px;
+  margin-left: 6px;
+  font-weight: 300;
+  color: var(--text-dim);
+}

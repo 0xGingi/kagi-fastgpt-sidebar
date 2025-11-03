@@ -5,6 +5,12 @@
     sidebar.classList.toggle('kagi-sidebar-hidden');
     
     if (wasHidden && !sidebar.classList.contains('kagi-sidebar-hidden')) {
+      try {
+        const isCM = document.documentElement.getAttribute('data-kagi-cm') === '1';
+        if (isCM && typeof window.kagiSuppressClickAway === 'function') {
+          window.kagiSuppressClickAway(1000);
+        }
+      } catch {}
       setTimeout(() => {
         const setup = document.getElementById('kagi-api-setup');
         const chatInterface = document.getElementById('kagi-chat-interface');
